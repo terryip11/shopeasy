@@ -1,0 +1,118 @@
+import { NextRequest, NextResponse } from 'next/server';
+
+import { z } from 'zod';
+
+import { getAuthUser, getUserRole } from '@/lib/auth/server';
+
+import { isSuperAdmin } from '@/lib/auth/permissions';
+
+import {
+
+  getCourierMinBaseFees,
+
+  setCourierMinBaseFees,
+
+} from '@/lib/finance/platform-settings';
+
+import { logAdminAction } from '@/lib/admin/merchant-actions';
+
+
+
+const patchSchema = z.object({
+
+  food: z.number().min(0).max(99999),
+
+  parcel: z.number().min(0).max(99999),
+
+});
+
+
+
+export async function GET() {
+
+  const role = await getUserRole();
+
+  if (!isSuperAdmin(role)) {
+
+    return NextResponse.json({ error: '僅全權管理員可查看' }, { status: 403 });
+
+  }
+
+
+
+  try {
+
+    const fees = await getCourierMinBaseFees();
+
+    return NextResponse.json(fees);
+
+  } catch (error) {
+
+    return NextResponse.json({ error: (error as Error).message }, { status: 500 });
+
+  }
+
+}
+
+
+
+export async function PATCH(request: NextRequest) {
+
+  const user = await getAuthUser();
+
+  const role = await getUserRole();
+
+  if (!user || !isSuperAdmin(role)) {
+
+    return NextResponse.json({ error: '僅全權管理員可調整' }, { status: 403 });
+
+  }
+
+
+
+  try {
+
+    const body = patchSchema.parse(await request.json());
+
+    const result = await setCourierMinBaseFees(body, user.id);
+
+    if (result.error) {
+
+      return NextResponse.json({ error: result.error }, { status: 400 });
+
+    }
+
+
+
+    await logAdminAction(
+
+      user.id,
+
+      'platform.courier_min_base_fee.update',
+
+      'platform_settings',
+
+      'courier_min_base_fee',
+
+      result.fees
+
+    );
+
+
+
+    return NextResponse.json(result.fees);
+
+  } catch (error) {
+
+    if (error instanceof z.ZodError) {
+
+      return NextResponse.json({ error: error.issues[0]?.message }, { status: 400 });
+
+    }
+
+    return NextResponse.json({ error: (error as Error).message }, { status: 500 });
+
+  }
+
+}
+

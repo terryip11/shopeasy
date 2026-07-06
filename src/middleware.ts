@@ -1,0 +1,132 @@
+import { createServerClient } from '@supabase/ssr';
+import { NextResponse, type NextRequest } from 'next/server';
+import type { UserRole } from '@/lib/auth/permissions';
+import { isAdminRole, canAccessAdminRoute } from '@/lib/auth/permissions';
+import { resolvePostLoginPath } from '@/lib/auth/post-login';
+
+async function getUserRole(
+  supabase: ReturnType<typeof createServerClient>,
+  userId: string
+): Promise<UserRole | null> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', userId)
+    .maybeSingle();
+
+  if (error) {
+    console.error('[middleware] 讀取 profiles 失敗:', error.message);
+    return null;
+  }
+
+  return (data?.role as UserRole) ?? null;
+}
+
+function pathNeedsRoleCheck(pathname: string): boolean {
+  return (
+    pathname.startsWith('/admin') ||
+    pathname.startsWith('/dashboard') ||
+    pathname.startsWith('/api/merchant') ||
+    pathname === '/login' ||
+    pathname === '/signup'
+  );
+}
+
+export async function middleware(request: NextRequest) {
+  let supabaseResponse = NextResponse.next({ request });
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+          supabaseResponse = NextResponse.next({ request });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          );
+        },
+      },
+    }
+  );
+
+  // 讀 cookie 內的 session，不打 Supabase Auth API（避免 429 / 節省配額）
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const user = session?.user ?? null;
+
+  const { pathname } = request.nextUrl;
+
+  const needsAuth =
+    pathname.startsWith('/dashboard') ||
+    pathname.startsWith('/admin') ||
+    pathname.startsWith('/courier') ||
+    pathname.startsWith('/orders') ||
+    pathname.startsWith('/merchant/apply') ||
+    pathname.startsWith('/api/upload') ||
+    pathname.startsWith('/api/admin') ||
+    pathname.startsWith('/api/checkout') ||
+    pathname.startsWith('/api/merchant') ||
+    pathname.startsWith('/api/orders') ||
+    pathname.startsWith('/api/courier');
+
+  if (needsAuth && !user) {
+    const loginUrl = request.nextUrl.clone();
+    loginUrl.pathname = '/login';
+    loginUrl.searchParams.set('redirect', pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  const role =
+    user && pathNeedsRoleCheck(pathname)
+      ? await getUserRole(supabase, user.id)
+      : null;
+
+  if (user && pathname.startsWith('/admin')) {
+    if (!isAdminRole(role) || !canAccessAdminRoute(role, pathname)) {
+      return NextResponse.redirect(new URL('/', request.url));
+    }
+  }
+
+  if (
+    user &&
+    (pathname.startsWith('/dashboard') || pathname.startsWith('/api/merchant')) &&
+    !pathname.startsWith('/api/merchant/apply') &&
+    role !== 'merchant' &&
+    role !== 'super_admin'
+  ) {
+    return NextResponse.redirect(new URL('/', request.url));
+  }
+
+  if (user && (pathname === '/login' || pathname === '/signup')) {
+    const destination = resolvePostLoginPath(role, '/');
+    return NextResponse.redirect(new URL(destination, request.url));
+  }
+
+  return supabaseResponse;
+}
+
+export const config = {
+  matcher: [
+    '/admin',
+    '/admin/:path*',
+    '/dashboard/:path*',
+    '/courier',
+    '/courier/:path*',
+    '/orders/:path*',
+    '/merchant/apply',
+    '/api/upload/:path*',
+    '/api/admin/:path*',
+    '/api/checkout',
+    '/api/merchant/:path*',
+    '/api/orders/:path*',
+    '/api/courier/:path*',
+    '/login',
+    '/signup',
+  ],
+};
