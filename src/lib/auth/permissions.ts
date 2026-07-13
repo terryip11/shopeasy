@@ -6,7 +6,7 @@
 
 
 
-export type UserRole = 'buyer' | 'merchant' | 'admin' | 'super_admin' | 'accountant';
+export type UserRole = 'buyer' | 'merchant' | 'admin' | 'super_admin' | 'accountant' | 'promoter';
 
 
 
@@ -132,6 +132,8 @@ const SUPER_ADMIN_ONLY_PREFIXES = [
 
   '/admin/orders/trace',
 
+  '/admin/affiliate',
+
 ];
 
 
@@ -139,6 +141,14 @@ const SUPER_ADMIN_ONLY_PREFIXES = [
 export function isAccountant(role: UserRole | null | undefined): boolean {
 
   return role === 'accountant';
+
+}
+
+
+
+export function isPromoter(role: UserRole | null | undefined): boolean {
+
+  return role === 'promoter';
 
 }
 

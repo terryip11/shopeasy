@@ -118,14 +118,18 @@ export function Navbar() {
       ? '管理後台'
       : role === 'merchant'
         ? '商家中心'
-        : '我的帳號';
+        : role === 'promoter'
+          ? '分享員中心'
+          : '我的帳號';
 
   const dashboardHref =
     role === 'admin' || role === 'super_admin'
       ? '/admin'
       : role === 'merchant'
         ? '/dashboard'
-        : '/orders';
+        : role === 'promoter'
+          ? '/promoter'
+          : '/account';
 
   return (
     <nav

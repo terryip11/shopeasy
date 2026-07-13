@@ -6,7 +6,7 @@ import { CAPABILITY_LABELS, type UserCapability } from '@/lib/auth/capabilities'
 import { COURIER_STATUS_LABELS } from '@/lib/courier/types';
 import { cn } from '@/lib/utils';
 
-const ROLES = ['buyer', 'merchant', 'admin', 'accountant', 'super_admin'] as const;
+const ROLES = ['buyer', 'merchant', 'admin', 'accountant', 'super_admin', 'promoter'] as const;
 
 const ROLE_LABELS: Record<(typeof ROLES)[number], string> = {
   buyer: '買家',
@@ -14,6 +14,7 @@ const ROLE_LABELS: Record<(typeof ROLES)[number], string> = {
   admin: '營運管理員',
   accountant: '會計員',
   super_admin: '全權管理員',
+  promoter: '分享員',
 };
 
 const CAPABILITIES: UserCapability[] = ['food_courier', 'parcel_courier'];

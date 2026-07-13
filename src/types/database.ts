@@ -4,7 +4,7 @@
 
 export type Json = string | number | boolean | null | { [key: string]: Json } | Json[];
 
-export type UserRole = 'buyer' | 'merchant' | 'admin' | 'super_admin' | 'accountant';
+export type UserRole = 'buyer' | 'merchant' | 'admin' | 'super_admin' | 'accountant' | 'promoter';
 export type UserCapability = 'food_courier' | 'parcel_courier';
 export type DeliveryJobType = 'food' | 'parcel';
 export type DeliveryJobStatus =
@@ -94,6 +94,10 @@ export interface Database {
           ci_image_url: string | null;
           data_consent_at: string | null;
           logo_url: string | null;
+          store_tagline: string | null;
+          store_description: string | null;
+          banner_url: string | null;
+          theme_color: string | null;
           payment_methods: string[];
           payout_bank_name: string | null;
           payout_account_holder: string | null;
@@ -127,6 +131,10 @@ export interface Database {
           ci_image_url?: string | null;
           data_consent_at?: string | null;
           logo_url?: string | null;
+          store_tagline?: string | null;
+          store_description?: string | null;
+          banner_url?: string | null;
+          theme_color?: string | null;
           payment_methods?: string[];
           business_type?: MerchantBusinessType;
           stripe_subscription_id?: string | null;
@@ -150,6 +158,10 @@ export interface Database {
           ci_image_url?: string | null;
           data_consent_at?: string | null;
           logo_url?: string | null;
+          store_tagline?: string | null;
+          store_description?: string | null;
+          banner_url?: string | null;
+          theme_color?: string | null;
           payment_methods?: string[];
           payout_bank_name?: string | null;
           payout_account_holder?: string | null;

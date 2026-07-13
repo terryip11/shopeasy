@@ -56,6 +56,15 @@ export default async function AdminDashboard() {
           <p className="text-sm font-medium">分類管理</p>
           <p className="text-xs text-gray-500 mt-1">管理平台分類</p>
         </Link>
+        {superAdmin && (
+          <Link
+            href="/admin/affiliate"
+            className="rounded-xl bg-violet-50 p-6 hover:shadow-md transition dark:bg-violet-900/20"
+          >
+            <p className="text-sm font-medium text-violet-800 dark:text-violet-200">分享推廣系統</p>
+            <p className="text-xs text-violet-600/80 dark:text-violet-300 mt-1">平台收費、佣金規則、分享員角色</p>
+          </Link>
+        )}
         {showCouriers && (
           <Link
             href="/admin/couriers/zones"
@@ -95,6 +104,11 @@ export default async function AdminDashboard() {
             <li>
               <Link href="/admin/users" className="text-orange-600 hover:underline">
                 用戶與角色管理
+              </Link>
+            </li>
+            <li>
+              <Link href="/admin/affiliate" className="text-orange-600 hover:underline">
+                分享推廣系統
               </Link>
             </li>
             <li>

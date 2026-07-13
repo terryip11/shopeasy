@@ -5,7 +5,7 @@
 ## 全新專案
 
 1. 執行 `schema.sql`（基礎表與 RLS）
-2. 依下表從 **v2 到 v39** 依序執行各 `migrate-v*.sql`
+2. 依下表從 **v2 到 v43** 依序執行各 `migrate-v*.sql`
 3. 可選：執行 `seed.sql`（示範分類）
 
 ## 既有專案
@@ -53,6 +53,10 @@
 | v37 | `migrate-v37-product-variants.sql` | 零售規格表 |
 | v38 | `migrate-v38-product-option-groups.sql` | 餐飲選項群組 |
 | v39 | `migrate-v39-order-completed.sql` | 訂單 completed 狀態 |
+| v40 | `migrate-v40-merchant-tier-pricing.sql` | 商家訂閱月費 platform_settings |
+| v41 | `migrate-v41-merchant-store-profile.sql` | 店鋪標語、簡介、橫幅、主題色 |
+| v42 | `migrate-v42-affiliate.sql` | 分享員、分享連結、佣金分帳 |
+| v43 | `migrate-v43-promoter-payout.sql` | 分享員 FPS 收款資料 |
 
 ## 驗證
 

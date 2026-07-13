@@ -34,6 +34,7 @@ export const checkoutSchema = z.object({
   payment_method: z.enum(MERCHANT_PAYMENT_METHODS).default('card'),
   save_to_address_book: z.boolean().optional(),
   address_label: z.string().max(40).optional().nullable(),
+  affiliate_ref: z.string().max(32).optional().nullable(),
 });
 
 export type ShippingInfo = z.infer<typeof shippingSchema>;

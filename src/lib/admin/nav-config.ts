@@ -39,6 +39,7 @@ const financeNav: AdminNavItem[] = [
 const systemNav: AdminNavItem[] = [
   { href: '/admin/usage', label: '平台使用統計' },
   { href: '/admin/merchants', label: '商家管理' },
+  { href: '/admin/affiliate', label: '分享推廣系統' },
   { href: '/admin/finance', label: '交易財務' },
   { href: '/admin/revenue', label: '訂閱收入' },
   { href: '/admin/orders/trace', label: '訂單流程追查' },

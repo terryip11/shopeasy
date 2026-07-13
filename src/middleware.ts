@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import type { UserRole } from '@/lib/auth/permissions';
-import { isAdminRole, canAccessAdminRoute } from '@/lib/auth/permissions';
+import { isAdminRole, canAccessAdminRoute, isPromoter } from '@/lib/auth/permissions';
 import { resolvePostLoginPath } from '@/lib/auth/post-login';
 
 async function getUserRole(
@@ -26,7 +26,9 @@ function pathNeedsRoleCheck(pathname: string): boolean {
   return (
     pathname.startsWith('/admin') ||
     pathname.startsWith('/dashboard') ||
+    pathname.startsWith('/promoter') ||
     pathname.startsWith('/api/merchant') ||
+    pathname.startsWith('/api/promoter') ||
     pathname === '/login' ||
     pathname === '/signup'
   );
@@ -66,12 +68,15 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/dashboard') ||
     pathname.startsWith('/admin') ||
     pathname.startsWith('/courier') ||
+    pathname.startsWith('/promoter') ||
     pathname.startsWith('/orders') ||
+    pathname.startsWith('/account') ||
     pathname.startsWith('/merchant/apply') ||
     pathname.startsWith('/api/upload') ||
     pathname.startsWith('/api/admin') ||
     pathname.startsWith('/api/checkout') ||
     pathname.startsWith('/api/merchant') ||
+    pathname.startsWith('/api/promoter') ||
     pathname.startsWith('/api/orders') ||
     pathname.startsWith('/api/courier');
 
@@ -103,6 +108,16 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/', request.url));
   }
 
+  if (
+    user &&
+    (pathname.startsWith('/promoter') || pathname.startsWith('/api/promoter')) &&
+    !pathname.startsWith('/api/promoter/apply') &&
+    !isPromoter(role) &&
+    role !== 'super_admin'
+  ) {
+    return NextResponse.redirect(new URL('/', request.url));
+  }
+
   if (user && (pathname === '/login' || pathname === '/signup')) {
     const destination = resolvePostLoginPath(role, '/');
     return NextResponse.redirect(new URL(destination, request.url));
@@ -118,12 +133,17 @@ export const config = {
     '/dashboard/:path*',
     '/courier',
     '/courier/:path*',
+    '/promoter',
+    '/promoter/:path*',
     '/orders/:path*',
+    '/account',
+    '/account/:path*',
     '/merchant/apply',
     '/api/upload/:path*',
     '/api/admin/:path*',
     '/api/checkout',
     '/api/merchant/:path*',
+    '/api/promoter/:path*',
     '/api/orders/:path*',
     '/api/courier/:path*',
     '/login',

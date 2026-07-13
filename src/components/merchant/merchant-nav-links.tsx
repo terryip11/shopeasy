@@ -7,6 +7,7 @@ import {
   Package,
   ShoppingCart,
   Settings,
+  Share2,
   type LucideIcon,
 } from 'lucide-react';
 import { useOrderNotifications } from '@/components/merchant/order-notification-provider';
@@ -21,6 +22,7 @@ export const MERCHANT_NAV_ITEMS: MerchantNavItem[] = [
   { href: '/dashboard', label: '儀表板', icon: LayoutDashboard },
   { href: '/dashboard/products', label: '商品管理', icon: Package },
   { href: '/dashboard/orders', label: '訂單管理', icon: ShoppingCart },
+  { href: '/dashboard/affiliate', label: '分享推廣', icon: Share2 },
   { href: '/dashboard/settings', label: '店鋪設置', icon: Settings },
 ];
 

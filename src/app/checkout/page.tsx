@@ -25,6 +25,7 @@ import {
 } from '@/lib/checkout/draft';
 import type { Database } from '@/types/database';
 import type { MerchantPaymentMethod } from '@/lib/merchant/payment-methods';
+import { getAffiliateRefFromDocument } from '@/lib/affiliate/client';
 import {
   MapPin,
   User,
@@ -201,6 +202,7 @@ export default function CheckoutPage() {
           save_to_address_book:
             loggedIn && selectedAddressId === 'new' && saveToAddressBook,
           address_label: addressLabel || null,
+          affiliate_ref: getAffiliateRefFromDocument(),
         }),
       });
 

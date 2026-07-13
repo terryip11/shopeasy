@@ -20,6 +20,8 @@ import {
 import { validatePayoutForMethods } from '@/lib/merchant/payout';
 import { saveShippingToAddressBook } from '@/lib/buyer/addresses';
 import { notifyMerchantNewPendingOrder } from '@/lib/push/notify-order';
+import { resolveShareAttribution } from '@/lib/affiliate/attribution';
+import { AFFILIATE_COOKIE_NAME } from '@/lib/affiliate/client';
 import type { MerchantPaymentMethod } from '@/lib/merchant/payment-methods';
 
 type ProductRow = {
@@ -55,7 +57,11 @@ export async function POST(request: NextRequest) {
       payment_method: paymentMethod,
       save_to_address_book: saveToAddressBook,
       address_label: addressLabel,
+      affiliate_ref: bodyAffiliateRef,
     } = checkoutSchema.parse(body);
+
+    const cookieRef = request.cookies.get(AFFILIATE_COOKIE_NAME)?.value ?? null;
+    const affiliateRef = bodyAffiliateRef?.trim() || cookieRef?.trim() || null;
 
     const supabase = await createClient();
     const productIds = items.map((i) => i.id);
@@ -138,22 +144,39 @@ export async function POST(request: NextRequest) {
         ...(i.option_selections?.length ? { option_selections: i.option_selections } : {}),
       }));
 
+      const productIds = group.items.map((i) => i.id);
+      const attribution = await resolveShareAttribution({
+        refCode: affiliateRef,
+        productIds,
+        buyerId: user.id,
+        merchantId,
+      });
+
+      const orderInsert: Record<string, unknown> = {
+        user_id: user.id,
+        merchant_id: merchantId,
+        items: orderItems,
+        subtotal,
+        shipping_fee: shippingFee,
+        total: orderTotal,
+        status: 'pending',
+        payment_method: paymentMethod,
+        shipping_name: shipping.name,
+        shipping_phone: shipping.phone,
+        shipping_address: shipping.address,
+        shipping_zone_id: shipping.zone_id,
+      };
+
+      if (attribution) {
+        orderInsert.share_link_id = attribution.shareLinkId;
+        orderInsert.promoter_id = attribution.promoterId;
+        orderInsert.affiliate_commission_rate = attribution.commissionRate;
+        orderInsert.affiliate_status = 'pending';
+      }
+
       const { data: order, error: orderError } = await (supabase as any)
         .from('orders')
-        .insert({
-          user_id: user.id,
-          merchant_id: merchantId,
-          items: orderItems,
-          subtotal,
-          shipping_fee: shippingFee,
-          total: orderTotal,
-          status: 'pending',
-          payment_method: paymentMethod,
-          shipping_name: shipping.name,
-          shipping_phone: shipping.phone,
-          shipping_address: shipping.address,
-          shipping_zone_id: shipping.zone_id,
-        })
+        .insert(orderInsert)
         .select('id')
         .single();
 

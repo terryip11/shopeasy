@@ -5,10 +5,20 @@ import { getActiveMerchantForUser } from '@/lib/auth/server';
 import { MERCHANT_PAYMENT_METHODS, normalizePaymentMethods } from '@/lib/merchant/payment-methods';
 import { payoutFromMerchant, validatePayoutForMethods, methodHasPayoutConfig, syncPaymentMethodsFromPayout } from '@/lib/merchant/payout';
 import { MERCHANT_BUSINESS_TYPES } from '@/lib/merchant/business-type';
+import { normalizeStoreThemeColor } from '@/lib/merchant/store-theme';
+
+const hexColorSchema = z
+  .string()
+  .regex(/^#[0-9A-Fa-f]{6}$/, '主題色格式須為 #RRGGBB')
+  .optional();
 
 const bodySchema = z.object({
   name: z.string().min(1, '店鋪名稱不可為空').max(80).optional(),
   logo_url: z.string().url('Logo 網址無效').nullable().optional(),
+  banner_url: z.string().url('橫幅網址無效').nullable().optional(),
+  store_tagline: z.string().max(120, '標語最多 120 字').nullable().optional(),
+  store_description: z.string().max(500, '簡介最多 500 字').nullable().optional(),
+  theme_color: hexColorSchema,
   payment_methods: z
     .array(z.enum(MERCHANT_PAYMENT_METHODS))
     .min(1, '請至少保留一種支付方式')
@@ -48,6 +58,14 @@ function schemaColumnHint(msg: string): string | null {
   if (msg.includes('business_type')) {
     return '資料庫尚未加入商家業務類型欄位，請執行 supabase/migrate-v28-merchant-business-type.sql';
   }
+  if (
+    msg.includes('store_tagline') ||
+    msg.includes('store_description') ||
+    msg.includes('banner_url') ||
+    msg.includes('theme_color')
+  ) {
+    return '資料庫尚未加入店鋪品牌欄位，請執行 supabase/migrate-v41-merchant-store-profile.sql';
+  }
   return null;
 }
 
@@ -62,6 +80,10 @@ export async function PATCH(request: NextRequest) {
     if (
       body.name === undefined &&
       body.logo_url === undefined &&
+      body.banner_url === undefined &&
+      body.store_tagline === undefined &&
+      body.store_description === undefined &&
+      body.theme_color === undefined &&
       body.payment_methods === undefined &&
       body.payout_bank_name === undefined &&
       body.payout_account_holder === undefined &&
@@ -81,6 +103,16 @@ export async function PATCH(request: NextRequest) {
     const patch: Record<string, unknown> = {};
     if (body.name !== undefined) patch.name = body.name.trim();
     if (body.logo_url !== undefined) patch.logo_url = body.logo_url;
+    if (body.banner_url !== undefined) patch.banner_url = body.banner_url;
+    if (body.store_tagline !== undefined) {
+      patch.store_tagline = body.store_tagline?.trim() || null;
+    }
+    if (body.store_description !== undefined) {
+      patch.store_description = body.store_description?.trim() || null;
+    }
+    if (body.theme_color !== undefined) {
+      patch.theme_color = normalizeStoreThemeColor(body.theme_color);
+    }
 
     const nextMethods =
       body.payment_methods !== undefined
@@ -184,7 +216,7 @@ export async function PATCH(request: NextRequest) {
       .update(patch)
       .eq('id', merchant.id)
       .select(
-        'id, name, slug, logo_url, payment_methods, payout_bank_name, payout_account_holder, payout_account_number, payout_fps_id, payout_wechat_id, payout_wechat_qr_url, payout_alipay_id, payout_alipay_qr_url, courier_fee_food, courier_fee_parcel, business_type'
+        'id, name, slug, logo_url, banner_url, store_tagline, store_description, theme_color, payment_methods, payout_bank_name, payout_account_holder, payout_account_number, payout_fps_id, payout_wechat_id, payout_wechat_qr_url, payout_alipay_id, payout_alipay_qr_url, courier_fee_food, courier_fee_parcel, business_type'
       )
       .single();
 

@@ -22,11 +22,11 @@ export default async function AccountAddressesPage() {
       <Navbar />
       <main className="mx-auto max-w-3xl flex-1 px-4 py-12 sm:px-6 lg:px-8">
         <Link
-          href="/orders"
+          href="/account"
           className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-orange-600"
         >
           <ChevronLeft className="h-4 w-4" />
-          返回我的訂單
+          返回我的帳號
         </Link>
         <h1 className="mt-4 text-2xl font-bold text-gray-900 dark:text-white">收貨地址</h1>
         <p className="mt-1 text-sm text-gray-500">

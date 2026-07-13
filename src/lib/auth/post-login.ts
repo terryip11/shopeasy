@@ -13,5 +13,6 @@ export function resolvePostLoginPath(
   if (isAccountant(role)) return '/admin/finance';
   if (role === 'admin' || role === 'super_admin') return '/admin';
   if (role === 'merchant') return '/dashboard';
+  if (role === 'promoter') return '/promoter';
   return requestedPath;
 }

@@ -7,7 +7,7 @@ import { logAdminAction } from '@/lib/admin/merchant-actions';
 type RouteContext = { params: Promise<{ id: string }> };
 
 const roleSchema = z.object({
-  role: z.enum(['buyer', 'merchant', 'admin', 'accountant', 'super_admin']),
+  role: z.enum(['buyer', 'merchant', 'admin', 'accountant', 'super_admin', 'promoter']),
 });
 
 export async function PATCH(request: NextRequest, context: RouteContext) {

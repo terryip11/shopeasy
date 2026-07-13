@@ -4,14 +4,20 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { allocateInfraCostForOrder } from '@/lib/finance/infra-allocation';
 import { getPlatformFeeRate, roundMoney } from '@/lib/finance/config';
 import { resolveStripeFeeHkd } from '@/lib/finance/stripe-fee';
+import { recordAffiliateCommission, reverseAffiliateCommission } from '@/lib/affiliate/commission';
 
 type OrderRow = {
   id: string;
   merchant_id: string | null;
   total: number;
+  subtotal: number | null;
   payment_method: string | null;
   stripe_payment_id: string | null;
   status: string;
+  share_link_id: string | null;
+  promoter_id: string | null;
+  affiliate_commission_amount: number | null;
+  affiliate_platform_fee: number | null;
 };
 
 /** 訂單標記已付款後寫入財務分錄（冪等） */
@@ -33,7 +39,9 @@ export async function recordOrderLedger(
 
   const { data: order, error: orderError } = await supabase
     .from('orders')
-    .select('id, merchant_id, total, payment_method, stripe_payment_id, status')
+    .select(
+      'id, merchant_id, total, subtotal, payment_method, stripe_payment_id, status, share_link_id, promoter_id, affiliate_commission_amount, affiliate_platform_fee'
+    )
     .eq('id', orderId)
     .single();
 
@@ -67,10 +75,31 @@ export async function recordOrderLedger(
   const paidAt = new Date();
   const infraCostAllocated = await allocateInfraCostForOrder(paidAt);
 
-  const merchantNet = roundMoney(
-    gmv - stripeFee - platformFeeAmount - infraCostAllocated
+  const affiliateResult = await recordAffiliateCommission(orderId);
+  if (!affiliateResult.ok && !affiliateResult.skipped) {
+    console.error('[ledger] affiliate commission failed:', affiliateResult.error);
+  }
+
+  const { data: orderAfterAffiliate } = await supabase
+    .from('orders')
+    .select('affiliate_commission_amount, affiliate_platform_fee, promoter_id')
+    .eq('id', orderId)
+    .maybeSingle();
+
+  const affiliateCommission = roundMoney(
+    Number((orderAfterAffiliate as OrderRow | null)?.affiliate_commission_amount ?? 0)
   );
-  const platformNet = roundMoney(platformFeeAmount - infraCostAllocated);
+  const affiliatePlatformFee = roundMoney(
+    Number((orderAfterAffiliate as OrderRow | null)?.affiliate_platform_fee ?? 0)
+  );
+  const promoterId = (orderAfterAffiliate as OrderRow | null)?.promoter_id ?? null;
+
+  const merchantNet = roundMoney(
+    gmv - stripeFee - platformFeeAmount - infraCostAllocated - affiliateCommission
+  );
+  const platformNet = roundMoney(
+    platformFeeAmount - infraCostAllocated + affiliatePlatformFee
+  );
 
   const { error: insertError } = await (supabase as any).from('order_ledger').insert({
     order_id: orderId,
@@ -85,6 +114,9 @@ export async function recordOrderLedger(
     delivery_cost: 0,
     merchant_net: merchantNet,
     platform_net: platformNet,
+    affiliate_commission_amount: affiliateCommission,
+    affiliate_platform_fee: affiliatePlatformFee,
+    promoter_id: promoterId,
     settlement_status: 'recorded',
     paid_at: paidAt.toISOString(),
   });
@@ -153,6 +185,7 @@ export async function syncLedgerStripeFees(): Promise<void> {
 /** 退款時沖銷分錄 */
 export async function reverseOrderLedger(orderId: string): Promise<void> {
   const supabase = createAdminClient();
+  await reverseAffiliateCommission(orderId);
   await (supabase as any)
     .from('order_ledger')
     .update({ settlement_status: 'reversed' })

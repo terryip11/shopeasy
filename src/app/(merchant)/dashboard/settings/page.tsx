@@ -36,6 +36,10 @@ async function getStoreSettings() {
     name: merchant.name,
     slug: merchant.slug,
     logoUrl: merchant.logo_url,
+    tagline: merchant.store_tagline,
+    description: merchant.store_description,
+    bannerUrl: merchant.banner_url,
+    themeColor: merchant.theme_color,
     paymentMethods: normalizePaymentMethods(merchant.payment_methods),
     payout: payoutFromMerchant(merchant),
     courierFeeFood: Number(merchant.courier_fee_food ?? DEFAULT_COURIER_FEE_BY_JOB_TYPE.food),
@@ -99,6 +103,10 @@ export default async function SettingsPage() {
               initialName={storeSettings.name}
               initialSlug={storeSettings.slug}
               initialLogoUrl={storeSettings.logoUrl}
+              initialTagline={storeSettings.tagline}
+              initialDescription={storeSettings.description}
+              initialBannerUrl={storeSettings.bannerUrl}
+              initialThemeColor={storeSettings.themeColor}
               storeUrl={storeUrl}
             />
           </CardContent>
