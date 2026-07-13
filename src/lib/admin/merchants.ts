@@ -12,6 +12,8 @@ export type AdminMerchantRow = {
   contact_name: string | null;
   contact_phone: string | null;
   contact_email: string | null;
+  br_image_url: string | null;
+  ci_image_url: string | null;
   owner_display_name: string | null;
   owner_email: string | null;
   applied_at: string;
@@ -30,7 +32,7 @@ export async function getAdminMerchantsList(page = 1, limit = 50): Promise<{
   const { data, error, count } = await (supabase as any)
     .from('merchants')
     .select(
-      'id, name, slug, user_id, status, tier, contact_name, contact_phone, contact_email, applied_at',
+      'id, name, slug, user_id, status, tier, contact_name, contact_phone, contact_email, br_image_url, ci_image_url, applied_at',
       { count: 'exact' }
     )
     .order('applied_at', { ascending: false })
@@ -48,6 +50,8 @@ export async function getAdminMerchantsList(page = 1, limit = 50): Promise<{
     contact_name: string | null;
     contact_phone: string | null;
     contact_email: string | null;
+    br_image_url: string | null;
+    ci_image_url: string | null;
     applied_at: string;
   }>;
 
@@ -82,6 +86,8 @@ export async function getAdminMerchantsList(page = 1, limit = 50): Promise<{
     contact_name: m.contact_name,
     contact_phone: m.contact_phone,
     contact_email: m.contact_email,
+    br_image_url: m.br_image_url,
+    ci_image_url: m.ci_image_url,
     owner_display_name: profileMap.get(m.user_id) ?? null,
     owner_email: emailMap.get(m.user_id) ?? null,
     applied_at: m.applied_at,

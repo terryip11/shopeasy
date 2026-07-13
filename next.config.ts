@@ -1,7 +1,12 @@
 import { spawnSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
+import path from 'node:path';
 import withSerwistInit from '@serwist/next';
 import type { NextConfig } from 'next';
+
+function swcHelperShim(name: 'interop-require-wildcard' | 'interop-require-default') {
+  return path.join(process.cwd(), 'src/lib/shims', `${name}.js`);
+}
 
 function lanDevOrigins(): string[] {
   const hosts = new Set<string>(['192.168.0.103']);
@@ -43,6 +48,24 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: '**.r2.dev' },
       { protocol: 'https', hostname: '**.amazonaws.com' },
     ],
+  },
+  // Next 16 dev + webpack：避免 @swc/helpers ESM 與 CJS interop 不相容造成白屏
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      const wildcardShim = swcHelperShim('interop-require-wildcard');
+      const defaultShim = swcHelperShim('interop-require-default');
+      const helpersRoot = path.join(process.cwd(), 'node_modules/@swc/helpers');
+
+      config.resolve ??= {};
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        '@swc/helpers/_/_interop_require_wildcard': wildcardShim,
+        '@swc/helpers/_/_interop_require_default': defaultShim,
+        [path.join(helpersRoot, 'esm/_interop_require_wildcard.js')]: wildcardShim,
+        [path.join(helpersRoot, 'esm/_interop_require_default.js')]: defaultShim,
+      };
+    }
+    return config;
   },
 };
 

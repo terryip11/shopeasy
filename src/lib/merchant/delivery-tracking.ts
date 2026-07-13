@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { getActiveMerchantForUser } from '@/lib/auth/server';
 import { pickPrimaryDeliveryJob } from '@/lib/delivery/pick-primary-job';
+import { repairDropoffCoordinates } from '@/lib/delivery/geo';
 import type { MerchantOrderTracking } from '@/lib/merchant/delivery-tracking-types';
 import type { Database } from '@/types/database';
 
@@ -17,7 +18,7 @@ export async function getMerchantOrderTracking(orderId: string): Promise<Merchan
 
   const { data: order } = await supabase
     .from('orders')
-    .select('id, status, total, shipping_name, shipping_phone, shipping_address, shipping_zone_id, created_at, merchant_id')
+    .select('id, status, total, shipping_name, shipping_phone, shipping_address, shipping_zone_id, tracking_number, created_at, merchant_id')
     .eq('id', orderId)
     .eq('merchant_id', merchant.id)
     .single();
@@ -29,6 +30,7 @@ export async function getMerchantOrderTracking(orderId: string): Promise<Merchan
     shipping_phone: string | null;
     shipping_address: string | null;
     shipping_zone_id: string | null;
+    tracking_number: string | null;
   };
 
   const { data: jobs } = await supabase
@@ -64,6 +66,39 @@ export async function getMerchantOrderTracking(orderId: string): Promise<Merchan
 
   let dropoffLat = jobRow?.dropoff_lat != null ? Number(jobRow.dropoff_lat) : null;
   let dropoffLng = jobRow?.dropoff_lng != null ? Number(jobRow.dropoff_lng) : null;
+  let dropoffMapLabel: string | null = null;
+
+  if (jobRow) {
+    const repaired = await repairDropoffCoordinates({
+      dropoffAddress: jobRow.dropoff_address,
+      dropoffLat,
+      dropoffLng,
+      zoneSlug: jobRow.delivery_zones?.slug ?? null,
+      zoneName: jobRow.delivery_zones?.name ?? null,
+    });
+
+    if (repaired) {
+      const changed =
+        dropoffLat !== repaired.lat ||
+        dropoffLng !== repaired.lng ||
+        dropoffLat == null ||
+        dropoffLng == null;
+
+      dropoffLat = repaired.lat;
+      dropoffLng = repaired.lng;
+      if (repaired.source === 'district' && repaired.label) {
+        dropoffMapLabel = `${repaired.label}（配送區域中心，詳細地址見上方）`;
+      }
+
+      if (changed && jobRow.id) {
+        const admin = createAdminClient();
+        void (admin as any)
+          .from('delivery_jobs')
+          .update({ dropoff_lat: repaired.lat, dropoff_lng: repaired.lng })
+          .eq('id', jobRow.id);
+      }
+    }
+  }
 
   return {
     order: {
@@ -73,6 +108,7 @@ export async function getMerchantOrderTracking(orderId: string): Promise<Merchan
       shipping_name: orderRow.shipping_name,
       shipping_phone: orderRow.shipping_phone,
       shipping_address: orderRow.shipping_address,
+      tracking_number: orderRow.tracking_number,
       created_at: orderRow.created_at,
     },
     job: jobRow
@@ -91,6 +127,7 @@ export async function getMerchantOrderTracking(orderId: string): Promise<Merchan
           picked_up_at: jobRow.picked_up_at,
           delivered_at: jobRow.delivered_at,
           zone_name: jobRow.delivery_zones?.name ?? null,
+          dropoff_map_label: dropoffMapLabel,
           courier,
         }
       : null,

@@ -1,10 +1,12 @@
 import { getSubscriptionRevenueStats } from '@/lib/merchant/subscription';
 import { getUserRole } from '@/lib/auth/server';
-import { canManageFinance } from '@/lib/auth/permissions';
+import { canManageFinance, isSuperAdmin } from '@/lib/auth/permissions';
 import { redirect } from 'next/navigation';
 import { MERCHANT_TIER_LABELS } from '@/lib/merchant/tier-config';
+import { formatTierPriceSummary, getTierMonthlyPrices } from '@/lib/merchant/tier-pricing';
 import { FinanceSubnav } from '@/components/admin/finance-subnav';
 import { FinanceMonthPickerBar } from '@/components/admin/finance-month-picker-bar';
+import { AdminMerchantTierPricingForm } from '@/components/admin/admin-merchant-tier-pricing-form';
 import { parseMonthParam } from '@/lib/finance/month-bounds';
 import { DollarSign, TrendingUp, Users, Crown } from 'lucide-react';
 
@@ -22,19 +24,35 @@ export default async function AdminRevenuePage({
 
   const { month } = await searchParams;
   const bounds = parseMonthParam(month);
-  const stats = await getSubscriptionRevenueStats(month);
+  const [stats, tierPrices] = await Promise.all([
+    getSubscriptionRevenueStats(month),
+    getTierMonthlyPrices(),
+  ]);
+  const canEditPricing = isSuperAdmin(role);
 
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">訂閱收入</h1>
         <p className="mt-1 text-sm text-gray-500">
-          商家等級月費收入（高級 HK$88 · 尊貴 HK$128）
+          商家等級月費收入（{formatTierPriceSummary(tierPrices)}）
         </p>
       </div>
 
       <FinanceSubnav active="/admin/revenue" monthParam={bounds.monthParam} />
       <FinanceMonthPickerBar monthParam={bounds.monthParam} />
+
+      {canEditPricing && (
+        <div className="rounded-xl bg-white p-6 shadow dark:bg-gray-900">
+          <h2 className="font-semibold text-gray-900 dark:text-white">訂閱月費設定</h2>
+          <p className="mt-1 text-sm text-gray-500">
+            僅全權管理員可調整。商家在儀表板訂閱時將顯示以下月費。
+          </p>
+          <div className="mt-4">
+            <AdminMerchantTierPricingForm initialPrices={tierPrices} />
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-xl bg-green-50 p-6 dark:bg-green-900/20">

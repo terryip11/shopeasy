@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, MapPin, Phone, User } from 'lucide-react';
+import { ArrowLeft, MapPin, Package, Phone, User } from 'lucide-react';
 import { DeliveryTrackMap } from '@/components/merchant/delivery-track-map';
 import { OrderStatusBadge } from '@/components/orders/order-status-badge';
 import { DELIVERY_JOB_STATUS_LABELS } from '@/lib/courier/types';
@@ -113,8 +113,24 @@ export function MerchantOrderTrackingPanel({ orderId, initial }: Props) {
         </div>
       </div>
 
+      {order.tracking_number && (
+        <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950/30 sm:p-6">
+          <h2 className="flex items-center gap-2 font-semibold text-gray-900 dark:text-white">
+            <Package className="h-5 w-5 text-blue-600" />
+            快遞物流追蹤號
+          </h2>
+          <p className="mt-2 font-mono text-lg font-semibold text-blue-800 dark:text-blue-200">
+            {order.tracking_number}
+          </p>
+          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+            此單號為您「標記發貨」時填寫的<strong>外部快遞單號</strong>，供買家自行到快遞公司網站查件。
+            下方地圖追蹤的是<strong>平台配送員</strong>位置，不會顯示快遞單號路線。
+          </p>
+        </div>
+      )}
+
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-2xl bg-white p-6 shadow-sm dark:bg-gray-800 space-y-4">
+        <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-gray-800 sm:p-6 space-y-4">
           <h2 className="font-semibold text-gray-900 dark:text-white">收貨資訊</h2>
           <p className="text-sm text-gray-600 dark:text-gray-300">{order.shipping_name || '—'}</p>
           {order.shipping_phone && (
@@ -131,7 +147,7 @@ export function MerchantOrderTrackingPanel({ orderId, initial }: Props) {
           )}
         </div>
 
-        <div className="rounded-2xl bg-white p-6 shadow-sm dark:bg-gray-800 space-y-4">
+        <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-gray-800 sm:p-6 space-y-4">
           <h2 className="font-semibold text-gray-900 dark:text-white">配送狀態</h2>
           {!job ? (
             <p className="text-sm text-gray-500">尚未建立配送任務</p>
@@ -190,8 +206,16 @@ export function MerchantOrderTrackingPanel({ orderId, initial }: Props) {
       </div>
 
       {dropoff && (
-        <div className="rounded-2xl bg-white p-6 shadow-sm dark:bg-gray-800">
-          <h2 className="font-semibold text-gray-900 dark:text-white mb-4">地圖追蹤</h2>
+        <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-gray-800 sm:p-6">
+          <h2 className="mb-1 font-semibold text-gray-900 dark:text-white">平台配送地圖</h2>
+          <p className="mb-4 text-sm text-gray-500">
+            顯示送達地址與平台配送員即時位置（與快遞物流單號無關）
+          </p>
+          {job?.dropoff_map_label && (
+            <p className="mb-3 text-sm text-amber-700 dark:text-amber-300">
+              {job.dropoff_map_label}
+            </p>
+          )}
           {!courier && job && ['assigned', 'picked_up'].includes(job.status) && (
             <p className="text-sm text-amber-600 mb-3">
               配送員尚未回報 GPS 位置，地圖僅顯示送達地址
@@ -200,7 +224,7 @@ export function MerchantOrderTrackingPanel({ orderId, initial }: Props) {
           <DeliveryTrackMap
             dropoff={dropoff}
             courier={courier}
-            className="h-[420px] w-full rounded-2xl border border-gray-200 dark:border-gray-700 z-0"
+            className="h-[min(50vh,420px)] min-h-[240px] w-full rounded-2xl border border-gray-200 dark:border-gray-700 z-0 sm:min-h-[320px]"
           />
           {job?.dropoff_address && (
             <p className="mt-3 text-sm text-gray-500 flex items-start gap-2">

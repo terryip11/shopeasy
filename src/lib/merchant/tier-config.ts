@@ -15,11 +15,23 @@ export const MERCHANT_TIER_LIMITS: Record<
   vip: { maxProducts: 50, maxImagesPerProduct: 8 },
 };
 
-/** 月費（HKD） */
+/** 月費（HKD）預設值；後台可透過 platform_settings 覆寫 */
 export const TIER_MONTHLY_PRICE_HKD: Record<'premium' | 'vip', number> = {
   premium: 88,
   vip: 128,
 };
+
+export type TierMonthlyPrices = {
+  premium: number;
+  vip: number;
+};
+
+export function getDefaultTierMonthlyPrices(): TierMonthlyPrices {
+  return {
+    premium: TIER_MONTHLY_PRICE_HKD.premium,
+    vip: TIER_MONTHLY_PRICE_HKD.vip,
+  };
+}
 
 export function getTierMonthlyPriceHkd(tier: 'premium' | 'vip'): number {
   return TIER_MONTHLY_PRICE_HKD[tier];

@@ -34,17 +34,19 @@ export async function createDeliveryJobFromOrder(input: {
   }
 
   let zoneSlug: string | null = null;
+  let zoneName: string | null = null;
   if (input.zoneId) {
     const { data: zone } = await supabase
       .from('delivery_zones')
-      .select('slug')
+      .select('slug, name')
       .eq('id', input.zoneId)
       .maybeSingle();
-    zoneSlug = (zone as { slug: string } | null)?.slug ?? null;
+    zoneSlug = (zone as { slug: string; name: string } | null)?.slug ?? null;
+    zoneName = (zone as { slug: string; name: string } | null)?.name ?? null;
   }
 
   const dropoffCoords = input.dropoffAddress
-    ? await resolveDropoffCoordinates(input.dropoffAddress, zoneSlug)
+    ? await resolveDropoffCoordinates(input.dropoffAddress, zoneSlug, zoneName)
     : null;
 
   const { data, error } = await (supabase as any)

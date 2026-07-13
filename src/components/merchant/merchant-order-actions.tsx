@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Truck, RotateCcw } from 'lucide-react';
+import { Truck, RotateCcw, XCircle } from 'lucide-react';
 import { useOrderNotifications } from '@/components/merchant/order-notification-provider';
 import { useOrderRowStatus } from '@/components/merchant/order-row-context';
 import { attentionDelta } from '@/lib/merchant/order-attention';
@@ -21,7 +21,9 @@ export function MerchantOrderActions({
   const router = useRouter();
   const { status, setStatus } = useOrderRowStatus();
   const { adjustAttentionCount } = useOrderNotifications();
-  const [loading, setLoading] = useState<'ship' | 'refund' | 'markPaid' | 'confirmPaid' | null>(null);
+  const [loading, setLoading] = useState<
+    'ship' | 'refund' | 'markPaid' | 'confirmPaid' | 'cancel' | null
+  >(null);
 
   const refreshOrdersPage = () => {
     router.refresh();
@@ -64,6 +66,28 @@ export function MerchantOrderActions({
       refreshOrdersPage();
     } else {
       alert(data.error || '退款失敗');
+    }
+    setLoading(null);
+  };
+
+  const handleCancelPending = async () => {
+    if (
+      !confirm(
+        '確認取消此待付款訂單？\n\n適用於買家重複下單或未實際付款的訂單。取消後買家無需付款。'
+      )
+    ) {
+      return;
+    }
+    setLoading('cancel');
+
+    const res = await fetch(`/api/merchant/orders/${orderId}/cancel`, { method: 'POST' });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      adjustAttentionCount(attentionDelta('pending', 'cancelled'));
+      setStatus('cancelled');
+      refreshOrdersPage();
+    } else {
+      alert(data.error || '取消失敗');
     }
     setLoading(null);
   };
@@ -111,15 +135,27 @@ export function MerchantOrderActions({
   return (
     <div className="flex flex-wrap items-center gap-2">
       {isManualPending && (
-        <Button
-          variant="outline"
-          size="sm"
-          className="border-green-300 text-green-700"
-          onClick={handleConfirmPaid}
-          disabled={loading !== null}
-        >
-          {loading === 'confirmPaid' ? '處理中...' : paymentClaimed ? '確認已收款' : '標記已收款'}
-        </Button>
+        <>
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-green-300 text-green-700"
+            onClick={handleConfirmPaid}
+            disabled={loading !== null}
+          >
+            {loading === 'confirmPaid' ? '處理中...' : paymentClaimed ? '確認已收款' : '標記已收款'}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-gray-600 hover:text-red-600"
+            onClick={handleCancelPending}
+            disabled={loading !== null}
+          >
+            <XCircle className="mr-1 h-4 w-4" />
+            {loading === 'cancel' ? '處理中...' : '取消訂單'}
+          </Button>
+        </>
       )}
       {showDevMarkPaid && (
         <Button

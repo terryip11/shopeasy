@@ -3,8 +3,23 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { SupabaseAuthListener } from "@/lib/auth/client";
 import { AuthHashRecovery } from "@/components/auth/auth-hash-recovery";
 import { PwaProvider } from "@/components/pwa/pwa-provider";
+import { DevServiceWorkerCleanup } from "@/components/pwa/dev-service-worker-cleanup";
 import { themeInitScript } from "@/lib/theme";
 import "./globals.css";
+
+const devSwCleanupScript = `
+(function () {
+  if (typeof navigator === 'undefined' || !navigator.serviceWorker) return;
+  navigator.serviceWorker.getRegistrations().then(function (regs) {
+    regs.forEach(function (r) { r.unregister(); });
+  });
+  if (typeof caches !== 'undefined') {
+    caches.keys().then(function (keys) {
+      keys.forEach(function (k) { caches.delete(k); });
+    });
+  }
+})();
+`;
 
 const PWA_THEME_COLOR = "#f97316";
 
@@ -55,9 +70,13 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
+        {process.env.NODE_ENV === 'development' ? (
+          <script dangerouslySetInnerHTML={{ __html: devSwCleanupScript }} />
+        ) : null}
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body className="min-h-full flex flex-col">
+        <DevServiceWorkerCleanup />
         <PwaProvider>
           <SupabaseAuthListener>
             <AuthHashRecovery />

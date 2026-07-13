@@ -12,6 +12,7 @@ export async function GET() {
     merchant: {
       id: merchant.id,
       name: merchant.name,
+      slug: merchant.slug,
       logo_url: normalizeR2ImageUrl(merchant.logo_url),
     },
   });

@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Crown, CreditCard, ArrowUpCircle, Calendar } from 'lucide-react';
 import {
   MERCHANT_TIER_LABELS,
-  TIER_MONTHLY_PRICE_HKD,
   type MerchantTier,
+  type TierMonthlyPrices,
 } from '@/lib/merchant/tier-config';
 import type { MerchantTierInfo } from '@/lib/merchant/tiers';
 
@@ -18,12 +18,14 @@ const TIER_BADGE_STYLES: Record<MerchantTier, string> = {
 
 type Props = {
   initial: MerchantTierInfo;
+  monthlyPrices: TierMonthlyPrices;
   showUpgradeSuccess?: boolean;
   stripePaymentsEnabled?: boolean;
 };
 
 export function MerchantTierPanel({
   initial,
+  monthlyPrices,
   showUpgradeSuccess,
   stripePaymentsEnabled = false,
 }: Props) {
@@ -64,7 +66,7 @@ export function MerchantTierPanel({
       return;
     }
 
-    const price = TIER_MONTHLY_PRICE_HKD[selectedTier as 'premium' | 'vip'];
+    const price = monthlyPrices[selectedTier as 'premium' | 'vip'];
     if (
       !confirm(
         `確認訂閱「${MERCHANT_TIER_LABELS[selectedTier]}」？月費 HK$${price}，付款成功後立即生效。`
@@ -196,7 +198,7 @@ export function MerchantTierPanel({
                 onClick={() => setSelectedTier(tier)}
               >
                 {MERCHANT_TIER_LABELS[tier]} · HK$
-                {TIER_MONTHLY_PRICE_HKD[tier as 'premium' | 'vip']}/月
+                {monthlyPrices[tier as 'premium' | 'vip']}/月
               </Button>
             ))}
           </div>
@@ -258,10 +260,12 @@ export function MerchantTierPanel({
           <span className="font-medium text-gray-700 dark:text-gray-300">普通</span> · 免費 · 3 商品 · 2 圖
         </div>
         <div className="rounded-lg bg-white/80 px-3 py-2 dark:bg-gray-900/50">
-          <span className="font-medium text-gray-700 dark:text-gray-300">高級</span> · HK$88/月 · 20 商品 · 5 圖
+          <span className="font-medium text-gray-700 dark:text-gray-300">高級</span> · HK$
+          {monthlyPrices.premium}/月 · 20 商品 · 5 圖
         </div>
         <div className="rounded-lg bg-white/80 px-3 py-2 dark:bg-gray-900/50">
-          <span className="font-medium text-gray-700 dark:text-gray-300">尊貴</span> · HK$128/月 · 50 商品 · 8 圖
+          <span className="font-medium text-gray-700 dark:text-gray-300">尊貴</span> · HK$
+          {monthlyPrices.vip}/月 · 50 商品 · 8 圖
         </div>
       </div>
     </div>

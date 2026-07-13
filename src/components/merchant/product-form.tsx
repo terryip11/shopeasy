@@ -242,7 +242,7 @@ export function ProductForm({
         />
       )}
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <Label htmlFor="price">價格 (HKD) *</Label>
           <Input
@@ -273,7 +273,7 @@ export function ProductForm({
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className={hasVariants ? 'col-span-2' : ''}>
           <Label htmlFor="status">狀態</Label>
           <select

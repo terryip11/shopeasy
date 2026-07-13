@@ -5,6 +5,7 @@ import { hasPermission } from '@/lib/auth/permissions';
 import { getAdminMerchantsList, ownerLabel } from '@/lib/admin/merchants';
 import { MERCHANT_TIER_LABELS } from '@/lib/merchant/tier-config';
 import { AdminMerchantRowActions } from '@/components/admin/admin-merchant-row-actions';
+import { MerchantDocumentLinks } from '@/components/admin/merchant-document-links';
 import type { MerchantStatus, MerchantTier } from '@/types/database';
 import {
   Table,
@@ -98,6 +99,15 @@ export default async function AdminMerchantsPage() {
                   </dd>
                 </div>
                 <div className="col-span-2">
+                  <dt className="text-gray-400">證件</dt>
+                  <dd className="mt-0.5">
+                    <MerchantDocumentLinks
+                      brImageUrl={m.br_image_url}
+                      ciImageUrl={m.ci_image_url}
+                    />
+                  </dd>
+                </div>
+                <div className="col-span-2">
                   <dt className="text-gray-400">申請時間</dt>
                   <dd className="text-gray-600 dark:text-gray-400">
                     {new Date(m.applied_at).toLocaleString('zh-HK')}
@@ -127,6 +137,7 @@ export default async function AdminMerchantsPage() {
               <TableHead>店鋪</TableHead>
               <TableHead>負責人</TableHead>
               <TableHead>聯絡方式</TableHead>
+              <TableHead>證件</TableHead>
               <TableHead>等級</TableHead>
               <TableHead>狀態</TableHead>
               <TableHead>申請時間</TableHead>
@@ -169,6 +180,12 @@ export default async function AdminMerchantsPage() {
                       <span className="text-gray-400">—</span>
                     )}
                   </TableCell>
+                  <TableCell>
+                    <MerchantDocumentLinks
+                      brImageUrl={m.br_image_url}
+                      ciImageUrl={m.ci_image_url}
+                    />
+                  </TableCell>
                   <TableCell className="text-sm">
                     {MERCHANT_TIER_LABELS[m.tier as MerchantTier] ?? m.tier}
                   </TableCell>
@@ -193,7 +210,7 @@ export default async function AdminMerchantsPage() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={7} className="h-24 text-center text-gray-500">
+                <TableCell colSpan={8} className="h-24 text-center text-gray-500">
                   暫無商家
                 </TableCell>
               </TableRow>

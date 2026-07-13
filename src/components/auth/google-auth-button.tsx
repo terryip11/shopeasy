@@ -44,9 +44,14 @@ export function GoogleAuthButton({
     setLoading(true);
     setError('');
 
-    const authError = await signInWithGoogle(redirectTo);
-    if (authError) {
-      setError(authError.message);
+    try {
+      const authError = await signInWithGoogle(redirectTo);
+      if (authError) {
+        setError(authError.message);
+        setLoading(false);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Google 登入失敗，請稍後再試');
       setLoading(false);
     }
   };

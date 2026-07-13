@@ -29,18 +29,34 @@ export function getOAuthCallbackUrl() {
 }
 
 export async function signInWithGoogle(nextPath = '/') {
+  if (typeof window === 'undefined') {
+    return { message: '請在瀏覽器中登入' } as const;
+  }
+
   stashOAuthNextPath(nextPath);
   const supabase = createClient();
+  const redirectTo = getOAuthCallbackUrl();
 
-  const { error } = await supabase.auth.signInWithOAuth({
+  const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: getOAuthCallbackUrl(),
+      redirectTo,
       queryParams: {
         prompt: 'select_account',
       },
     },
   });
 
-  return error;
+  if (error) return error;
+
+  if (data?.url) {
+    window.location.assign(data.url);
+    return null;
+  }
+
+  return {
+    message:
+      '無法開啟 Google 登入，請確認 Supabase 已啟用 Google 提供者，並將 ' +
+      `${redirectTo} 加入 Redirect URLs`,
+  } as const;
 }

@@ -14,6 +14,7 @@ import { normalizeR2ImageUrl } from '@/lib/storage/r2-public-url';
 type MerchantBranding = {
   name: string;
   logoUrl: string | null;
+  storeSlug: string | null;
 };
 
 type MerchantBrandingContextValue = MerchantBranding & {
@@ -24,6 +25,7 @@ type MerchantBrandingContextValue = MerchantBranding & {
 const MerchantBrandingContext = createContext<MerchantBrandingContextValue>({
   name: '商家中心',
   logoUrl: null,
+  storeSlug: null,
   setLogoUrl: () => {},
   refreshBranding: async () => {},
 });
@@ -39,6 +41,7 @@ type ProviderProps = {
 
 export function MerchantBrandingProvider({ children, initial }: ProviderProps) {
   const [name, setName] = useState(initial?.name ?? '商家中心');
+  const [storeSlug, setStoreSlug] = useState<string | null>(initial?.storeSlug ?? null);
   const [logoUrl, setLogoUrlState] = useState<string | null>(
     normalizeR2ImageUrl(initial?.logoUrl ?? null)
   );
@@ -53,6 +56,7 @@ export function MerchantBrandingProvider({ children, initial }: ProviderProps) {
     const data = await res.json();
     if (data.merchant) {
       setName(data.merchant.name ?? '商家中心');
+      setStoreSlug(data.merchant.slug ?? null);
       setLogoUrlState(normalizeR2ImageUrl(data.merchant.logo_url));
     }
   }, []);
@@ -65,7 +69,7 @@ export function MerchantBrandingProvider({ children, initial }: ProviderProps) {
 
   return (
     <MerchantBrandingContext.Provider
-      value={{ name, logoUrl, setLogoUrl, refreshBranding }}
+      value={{ name, logoUrl, storeSlug, setLogoUrl, refreshBranding }}
     >
       {children}
     </MerchantBrandingContext.Provider>

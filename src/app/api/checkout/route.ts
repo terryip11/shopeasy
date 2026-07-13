@@ -181,11 +181,10 @@ export async function POST(request: NextRequest) {
     }
 
     if (isManualPaymentMethod(paymentMethod)) {
-      const appUrl = getAppUrl();
       return NextResponse.json({
         type: 'manual',
         orderIds,
-        redirectUrl: `${appUrl}/checkout/pay?orders=${orderIds.join(',')}`,
+        redirectUrl: `/checkout/pay?orders=${orderIds.join(',')}`,
       });
     }
 

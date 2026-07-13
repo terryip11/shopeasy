@@ -75,24 +75,22 @@ export default async function SettingsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-start gap-3 sm:items-center sm:gap-4">
         <Link
           href="/dashboard"
-          className="p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+          className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
         >
           <ArrowLeft className="h-5 w-5" />
         </Link>
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+        <div className="min-w-0">
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white sm:text-2xl">
             店鋪設置
           </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            管理您的店鋪信息和配送設置
-          </p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">管理您的店鋪信息和配送設置</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
         {/* Store Info */}
         <Card>
           <MerchantStoreInfoCardHeader />

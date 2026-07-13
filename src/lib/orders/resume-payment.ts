@@ -25,15 +25,16 @@ export async function buildResumePaymentResponse(
   }
 
   const method = paymentMethod ?? resolveOrderPaymentMethod(order);
-  const appUrl = getAppUrl();
 
   if (isManualPaymentMethod(method)) {
     return {
       type: 'manual' as const,
       paymentMethod: method,
-      redirectUrl: `${appUrl}/checkout/pay?orders=${order.id}`,
+      redirectUrl: `/checkout/pay?orders=${order.id}`,
     };
   }
+
+  const appUrl = getAppUrl();
 
   if (!isStripePaymentsEnabled()) {
     throw new Error(STRIPE_PAYMENTS_UNAVAILABLE_REASON);

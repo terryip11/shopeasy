@@ -6,6 +6,7 @@ export type MerchantOrderTracking = {
     shipping_name: string | null;
     shipping_phone: string | null;
     shipping_address: string | null;
+    tracking_number: string | null;
     created_at: string;
   };
   job: {
@@ -23,6 +24,7 @@ export type MerchantOrderTracking = {
     picked_up_at: string | null;
     delivered_at: string | null;
     zone_name: string | null;
+    dropoff_map_label?: string | null;
     courier: {
       display_name: string | null;
       phone: string | null;

@@ -9,10 +9,10 @@ import {
 } from '@/lib/payment/stripe';
 import {
   getUpgradeOptions,
-  getTierMonthlyPriceHkd,
   MERCHANT_TIER_LABELS,
   type MerchantTier,
 } from '@/lib/merchant/tier-config';
+import { getTierMonthlyPrices } from '@/lib/merchant/tier-pricing';
 
 const bodySchema = z.object({
   requested_tier: z.enum(['premium', 'vip']),
@@ -40,7 +40,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const priceHkd = getTierMonthlyPriceHkd(requested_tier);
+    const tierPrices = await getTierMonthlyPrices();
+    const priceHkd = tierPrices[requested_tier];
 
     if (!isStripePaymentsEnabled()) {
       return NextResponse.json({ error: STRIPE_PAYMENTS_UNAVAILABLE_REASON }, { status: 503 });
