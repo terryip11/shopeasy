@@ -96,7 +96,7 @@ export function MerchantBusinessTypeForm({ initialBusinessType }: Props) {
 
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
 
-          決定買家付款後自動建立的配送任務類型，以及手動建單時的預設選項。取件地址會自動帶入公司營業地址。
+          決定買家付款後自動建立的配送任務類型，以及手動建單時的預設選項。取件地址會自動帶入預設取件點。
 
         </p>
 

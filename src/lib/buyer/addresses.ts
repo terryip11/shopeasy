@@ -95,7 +95,7 @@ export async function createBuyerAddress(
       name: input.name.trim(),
       phone: normalizePhone(input.phone),
       address: input.address.trim(),
-      zone_id: input.zone_id,
+      zone_id: input.zone_id ?? null,
       is_default: makeDefault,
       updated_at: now,
     })
@@ -211,7 +211,7 @@ export async function saveShippingToAddressBook(
   const phone = normalizePhone(shipping.phone);
   const match = addresses.find(
     (a) =>
-      a.zone_id === shipping.zone_id &&
+      (a.zone_id ?? null) === (shipping.zone_id ?? null) &&
       normalizePhone(a.phone) === phone &&
       a.address.trim() === shipping.address.trim() &&
       a.name.trim() === shipping.name.trim()

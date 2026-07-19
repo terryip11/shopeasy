@@ -10,7 +10,6 @@ export type CheckoutDraft = {
   name: string;
   phone: string;
   address: string;
-  zoneId: string;
   selectedAddressId: string;
   paymentMethod: MerchantPaymentMethod;
   saveToAddressBook: boolean;
@@ -26,8 +25,7 @@ export function loadCheckoutDraft(): CheckoutDraft | null {
     if (
       typeof data.name !== 'string' ||
       typeof data.phone !== 'string' ||
-      typeof data.address !== 'string' ||
-      typeof data.zoneId !== 'string'
+      typeof data.address !== 'string'
     ) {
       return null;
     }
@@ -35,7 +33,6 @@ export function loadCheckoutDraft(): CheckoutDraft | null {
       name: data.name,
       phone: data.phone,
       address: data.address,
-      zoneId: data.zoneId,
       selectedAddressId:
         typeof data.selectedAddressId === 'string' ? data.selectedAddressId : 'new',
       paymentMethod: (data.paymentMethod as MerchantPaymentMethod) || 'card',

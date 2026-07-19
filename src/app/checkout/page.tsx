@@ -35,11 +35,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 
-type Zone = { id: string; name: string; slug: string };
 type BuyerAddress = Database['public']['Tables']['buyer_addresses']['Row'];
-
-const selectClassName =
-  'mt-1.5 flex h-11 w-full rounded-xl border border-input bg-background px-3.5 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:bg-gray-900';
 
 const textareaClassName =
   'mt-1.5 flex min-h-[120px] w-full resize-y rounded-xl border border-input bg-background px-3.5 py-3 text-sm leading-relaxed ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:bg-gray-900';
@@ -47,11 +43,9 @@ const textareaClassName =
 export default function CheckoutPage() {
   const router = useRouter();
   const [items, setItems] = useState<CartItem[]>([]);
-  const [zones, setZones] = useState<Zone[]>([]);
   const [name, setName] = useState(() => loadCheckoutDraft()?.name ?? '');
   const [phone, setPhone] = useState(() => loadCheckoutDraft()?.phone ?? '');
   const [address, setAddress] = useState(() => loadCheckoutDraft()?.address ?? '');
-  const [zoneId, setZoneId] = useState(() => loadCheckoutDraft()?.zoneId ?? '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [paymentOptions, setPaymentOptions] = useState<CheckoutPaymentOption[]>([]);
@@ -80,12 +74,10 @@ export default function CheckoutPage() {
     name: string;
     phone: string;
     address: string;
-    zone_id: string;
   }) => {
     setName(fields.name);
     setPhone(fields.phone);
     setAddress(fields.address);
-    setZoneId(fields.zone_id);
   };
 
   const handleSelectAddress = (id: string) => {
@@ -98,12 +90,6 @@ export default function CheckoutPage() {
   useEffect(() => {
     const cart = getCart();
     setItems(cart);
-    fetch('/api/delivery/zones')
-      .then((r) => r.json())
-      .then((data) => {
-        if (Array.isArray(data)) setZones(data);
-      })
-      .catch(() => {});
 
     fetch('/api/me')
       .then((r) => r.json())
@@ -165,7 +151,6 @@ export default function CheckoutPage() {
       name,
       phone,
       address,
-      zoneId,
       selectedAddressId,
       paymentMethod,
       saveToAddressBook,
@@ -175,7 +160,6 @@ export default function CheckoutPage() {
     name,
     phone,
     address,
-    zoneId,
     selectedAddressId,
     paymentMethod,
     saveToAddressBook,
@@ -197,7 +181,7 @@ export default function CheckoutPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           items,
-          shipping: { name, phone, address, zone_id: zoneId },
+          shipping: { name, phone, address },
           payment_method: paymentMethod,
           save_to_address_book:
             loggedIn && selectedAddressId === 'new' && saveToAddressBook,
@@ -240,7 +224,6 @@ export default function CheckoutPage() {
     name.trim() &&
     phone.trim() &&
     address.trim().length >= 5 &&
-    zoneId &&
     !loading &&
     !optionsLoading &&
     hasPayableMethod &&
@@ -303,7 +286,6 @@ export default function CheckoutPage() {
                 <div className="space-y-5 p-6">
                   <CheckoutAddressPicker
                     addresses={savedAddresses}
-                    zones={zones}
                     selectedId={selectedAddressId}
                     onSelect={handleSelectAddress}
                     loggedIn={loggedIn}
@@ -345,27 +327,6 @@ export default function CheckoutPage() {
                         autoComplete="tel"
                       />
                     </div>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="zone" className="flex items-center gap-1.5">
-                      <MapPin className="h-3.5 w-3.5 text-gray-400" />
-                      配送區域
-                    </Label>
-                    <select
-                      id="zone"
-                      value={zoneId}
-                      onChange={(e) => setZoneId(e.target.value)}
-                      required
-                      className={selectClassName}
-                    >
-                      <option value="">請選擇港島 / 九龍 / 新界</option>
-                      {zones.map((z) => (
-                        <option key={z.id} value={z.id}>
-                          {z.name}
-                        </option>
-                      ))}
-                    </select>
                   </div>
 
                   <div>

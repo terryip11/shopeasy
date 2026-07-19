@@ -23,6 +23,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { getCartItemCount } from '@/lib/cart';
 import { ThemeSwitcher } from '@/components/theme/theme-switcher';
+import { PwaInstallButton } from '@/components/pwa/pwa-install-button';
 import type { UserRole } from '@/lib/auth/permissions';
 
 export function Navbar() {
@@ -161,6 +162,7 @@ export function Navbar() {
         </form>
 
         <div className="flex items-center gap-3">
+          <PwaInstallButton />
           <ThemeSwitcher />
 
           {loggedIn && (

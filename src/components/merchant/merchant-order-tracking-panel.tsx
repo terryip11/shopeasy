@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, MapPin, Package, Phone, User } from 'lucide-react';
 import { DeliveryTrackMap } from '@/components/merchant/delivery-track-map';
+import { MerchantPickupQr } from '@/components/merchant/merchant-pickup-qr';
 import { OrderStatusBadge } from '@/components/orders/order-status-badge';
 import { DELIVERY_JOB_STATUS_LABELS } from '@/lib/courier/types';
 import { JOB_TYPE_LABELS } from '@/lib/auth/capabilities';
@@ -186,6 +187,21 @@ export function MerchantOrderTrackingPanel({ orderId, initial }: Props) {
               ) : (
                 <p className="text-sm text-gray-500">等待配送員接單…</p>
               )}
+              {job.pickup_address && (
+                <div className="space-y-1">
+                  <p className="flex items-start gap-2 text-sm text-gray-600">
+                    <MapPin className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
+                    取件：{job.pickup_address}
+                  </p>
+                  {(job.pickup_contact_name || job.pickup_contact_phone) && (
+                    <p className="pl-6 text-xs text-gray-500">
+                      聯絡
+                      {job.pickup_contact_name ? ` ${job.pickup_contact_name}` : ''}
+                      {job.pickup_contact_phone ? ` · ${job.pickup_contact_phone}` : ''}
+                    </p>
+                  )}
+                </div>
+              )}
               <dl className="grid grid-cols-2 gap-2 text-xs text-gray-500">
                 <div>
                   <dt>接單時間</dt>
@@ -204,6 +220,15 @@ export function MerchantOrderTrackingPanel({ orderId, initial }: Props) {
           )}
         </div>
       </div>
+
+      {job && job.pickup_code && ['pending', 'assigned'].includes(job.status) && (
+        <MerchantPickupQr
+          jobId={job.id}
+          pickupCode={job.pickup_code}
+          pickupAddress={job.pickup_address}
+          orderId={order.id}
+        />
+      )}
 
       {dropoff && (
         <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-gray-800 sm:p-6">

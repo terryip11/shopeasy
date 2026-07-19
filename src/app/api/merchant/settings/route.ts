@@ -34,6 +34,9 @@ const bodySchema = z.object({
   courier_fee_food: z.number().min(0, '送餐工資不可為負數').max(99999).optional(),
   courier_fee_parcel: z.number().min(0, '送貨工資不可為負數').max(99999).optional(),
   business_type: z.enum(MERCHANT_BUSINESS_TYPES).optional(),
+  default_pickup_address: z.string().max(500).nullable().optional(),
+  default_pickup_contact_name: z.string().max(100).nullable().optional(),
+  default_pickup_contact_phone: z.string().max(30).nullable().optional(),
 });
 
 function schemaColumnHint(msg: string): string | null {
@@ -57,6 +60,13 @@ function schemaColumnHint(msg: string): string | null {
   }
   if (msg.includes('business_type')) {
     return '資料庫尚未加入商家業務類型欄位，請執行 supabase/migrate-v28-merchant-business-type.sql';
+  }
+  if (
+    msg.includes('default_pickup_address') ||
+    msg.includes('default_pickup_contact_name') ||
+    msg.includes('default_pickup_contact_phone')
+  ) {
+    return '資料庫尚未加入預設發貨地點欄位，請執行 supabase/migrate-v47-merchant-default-pickup.sql';
   }
   if (
     msg.includes('store_tagline') ||
@@ -95,7 +105,10 @@ export async function PATCH(request: NextRequest) {
       body.payout_alipay_qr_url === undefined &&
       body.courier_fee_food === undefined &&
       body.courier_fee_parcel === undefined &&
-      body.business_type === undefined
+      body.business_type === undefined &&
+      body.default_pickup_address === undefined &&
+      body.default_pickup_contact_name === undefined &&
+      body.default_pickup_contact_phone === undefined
     ) {
       return NextResponse.json({ error: '沒有可更新的欄位' }, { status: 400 });
     }
@@ -157,6 +170,19 @@ export async function PATCH(request: NextRequest) {
     if (body.business_type !== undefined) {
       patch.business_type = body.business_type;
     }
+    if (body.default_pickup_address !== undefined) {
+      const addr = body.default_pickup_address?.trim() || '';
+      if (addr.length < 5) {
+        return NextResponse.json({ error: '請填寫完整的預設發貨地址（至少 5 字）' }, { status: 400 });
+      }
+      patch.default_pickup_address = addr;
+    }
+    if (body.default_pickup_contact_name !== undefined) {
+      patch.default_pickup_contact_name = body.default_pickup_contact_name?.trim() || null;
+    }
+    if (body.default_pickup_contact_phone !== undefined) {
+      patch.default_pickup_contact_phone = body.default_pickup_contact_phone?.trim() || null;
+    }
 
     const payout = payoutFromMerchant({
       payout_bank_name:
@@ -216,7 +242,7 @@ export async function PATCH(request: NextRequest) {
       .update(patch)
       .eq('id', merchant.id)
       .select(
-        'id, name, slug, logo_url, banner_url, store_tagline, store_description, theme_color, payment_methods, payout_bank_name, payout_account_holder, payout_account_number, payout_fps_id, payout_wechat_id, payout_wechat_qr_url, payout_alipay_id, payout_alipay_qr_url, courier_fee_food, courier_fee_parcel, business_type'
+        'id, name, slug, logo_url, banner_url, store_tagline, store_description, theme_color, payment_methods, payout_bank_name, payout_account_holder, payout_account_number, payout_fps_id, payout_wechat_id, payout_wechat_qr_url, payout_alipay_id, payout_alipay_qr_url, courier_fee_food, courier_fee_parcel, business_type, default_pickup_address, default_pickup_contact_name, default_pickup_contact_phone'
       )
       .single();
 

@@ -6,6 +6,7 @@ import { normalizeBusinessType } from '@/lib/merchant/business-type';
 import { MERCHANT_TIER_LIMITS, type MerchantTier } from '@/lib/merchant/tier-config';
 import { getCourierMinBaseFees } from '@/lib/finance/platform-settings';
 import { buildProductShippingContext } from '@/lib/merchant/product-shipping-hint';
+import { listPickupLocationsForMerchant } from '@/lib/merchant/pickup-locations';
 import { ProductForm } from '@/components/merchant/product-form';
 import { ArrowLeft } from 'lucide-react';
 
@@ -13,10 +14,11 @@ export const dynamic = 'force-dynamic';
 
 export default async function NewProductPage() {
   const merchant = await getActiveMerchantForUser();
-  const [categories, minFees, menuCategories] = await Promise.all([
+  const [categories, minFees, menuCategories, pickupLocations] = await Promise.all([
     getCategories(100),
     getCourierMinBaseFees().catch(() => ({ food: 0, parcel: 0 })),
     merchant ? listMenuCategories(merchant.id).catch(() => []) : Promise.resolve([]),
+    merchant ? listPickupLocationsForMerchant(merchant.id).catch(() => []) : Promise.resolve([]),
   ]);
   const tier = ((merchant?.tier as MerchantTier) || 'basic');
   const maxImages = MERCHANT_TIER_LIMITS[tier].maxImagesPerProduct;
@@ -41,6 +43,12 @@ export default async function NewProductPage() {
         shippingContext={buildProductShippingContext(merchant, minFees)}
         businessType={businessType}
         menuCategories={menuCategories}
+        pickupLocations={pickupLocations.map((l) => ({
+          id: l.id,
+          name: l.name,
+          address: l.address,
+          is_default: l.is_default,
+        }))}
       />
     </div>
   );

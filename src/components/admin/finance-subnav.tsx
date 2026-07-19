@@ -7,6 +7,7 @@ const LINKS = [
   { href: '/admin/finance/merchants', label: '商家應付' },
   { href: '/admin/finance/couriers', label: '配送員結算' },
   { href: '/admin/finance/reconciliation', label: '月結對帳' },
+  { href: '/admin/finance/platform-payout', label: '平台收款' },
   { href: '/admin/revenue', label: '訂閱收入' },
 ] as const;
 

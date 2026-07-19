@@ -103,6 +103,9 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       patchRow.checkout_shipping_fee = parsed.checkout_shipping_fee;
     }
     if (parsed.courier_fee !== undefined) patchRow.courier_fee = parsed.courier_fee;
+    if (parsed.pickup_location_id !== undefined) {
+      patchRow.pickup_location_id = parsed.pickup_location_id;
+    }
     if (parsed.product_kind !== undefined) patchRow.product_kind = parsed.product_kind;
     if (parsed.menu_category_id !== undefined) {
       patchRow.menu_category_id = parsed.menu_category_id;
@@ -110,6 +113,19 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     if (parsed.attributes !== undefined) patchRow.attributes = parsed.attributes;
 
     const supabase = await createClient();
+
+    if (parsed.pickup_location_id) {
+      const { data: loc } = await supabase
+        .from('merchant_pickup_locations')
+        .select('id')
+        .eq('id', parsed.pickup_location_id)
+        .eq('merchant_id', result.merchant!.id)
+        .maybeSingle();
+      if (!loc) {
+        return NextResponse.json({ error: '取件點不存在或不屬於本店' }, { status: 400 });
+      }
+    }
+
     const { data, error } = await (supabase as any)
       .from('products')
       .update(patchRow)

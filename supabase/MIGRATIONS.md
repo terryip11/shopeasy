@@ -5,7 +5,7 @@
 ## 全新專案
 
 1. 執行 `schema.sql`（基礎表與 RLS）
-2. 依下表從 **v2 到 v43** 依序執行各 `migrate-v*.sql`
+2. 依下表從 **v2 到 v49** 依序執行各 `migrate-v*.sql`
 3. 可選：執行 `seed.sql`（示範分類）
 
 ## 既有專案
@@ -57,6 +57,12 @@
 | v41 | `migrate-v41-merchant-store-profile.sql` | 店鋪標語、簡介、橫幅、主題色 |
 | v42 | `migrate-v42-affiliate.sql` | 分享員、分享連結、佣金分帳 |
 | v43 | `migrate-v43-promoter-payout.sql` | 分享員 FPS 收款資料 |
+| v44 | `migrate-v44-platform-payout.sql` | 平台 FPS 收款設定 |
+| v45 | `migrate-v45-buyer-address-zone-optional.sql` | 買家地址 zone_id 改選填 |
+| v46 | `migrate-v46-pickup-code.sql` | 配送取件 QR 確認碼 |
+| v47 | `migrate-v47-merchant-default-pickup.sql` | 商家預設發貨／取件地點 |
+| v48 | `migrate-v48-merchant-pickup-locations.sql` | 商家多取件點管理 |
+| v49 | `migrate-v49-product-pickup-location.sql` | 商品綁定取件點 |
 
 ## 驗證
 

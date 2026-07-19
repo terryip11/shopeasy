@@ -75,6 +75,19 @@ export async function POST(request: NextRequest) {
     );
 
     const supabase = await createClient();
+
+    if (parsed.pickup_location_id) {
+      const { data: loc } = await supabase
+        .from('merchant_pickup_locations')
+        .select('id')
+        .eq('id', parsed.pickup_location_id)
+        .eq('merchant_id', merchant!.id)
+        .maybeSingle();
+      if (!loc) {
+        return NextResponse.json({ error: '取件點不存在或不屬於本店' }, { status: 400 });
+      }
+    }
+
     const { data, error: dbError } = await (supabase as any)
       .from('products')
       .insert({ ...row, merchant_id: merchant!.id })

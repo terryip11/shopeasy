@@ -3,6 +3,42 @@ import { ZodError } from 'zod';
 import { getAuthUser } from '@/lib/auth/server';
 import { createClient } from '@/lib/supabase/server';
 import { merchantApplySchema, buildMerchantApplyPayload } from '@/lib/merchant/apply';
+import { createAdminClient } from '@/lib/supabase/admin';
+
+async function ensureInitialPickupLocation(merchantId: string, payload: {
+  company_address: string;
+  contact_name: string;
+  contact_phone: string;
+  default_pickup_address?: string;
+  default_pickup_contact_name?: string | null;
+  default_pickup_contact_phone?: string | null;
+}) {
+  const admin = createAdminClient();
+  const { data: existing } = await admin
+    .from('merchant_pickup_locations')
+    .select('id')
+    .eq('merchant_id', merchantId)
+    .limit(1);
+
+  if (existing && existing.length > 0) return;
+
+  const address =
+    payload.default_pickup_address?.trim() ||
+    payload.company_address.trim();
+  if (address.length < 5) return;
+
+  await (admin as any).from('merchant_pickup_locations').insert({
+    merchant_id: merchantId,
+    name: '預設發貨地',
+    address,
+    contact_name:
+      payload.default_pickup_contact_name?.trim() || payload.contact_name.trim() || null,
+    contact_phone:
+      payload.default_pickup_contact_phone?.trim() || payload.contact_phone.trim() || null,
+    is_default: true,
+    sort_order: 0,
+  });
+}
 
 export async function POST(request: NextRequest) {
   const user = await getAuthUser();
@@ -52,6 +88,7 @@ export async function POST(request: NextRequest) {
         if (error) {
           return NextResponse.json({ error: error.message }, { status: 500 });
         }
+        await ensureInitialPickupLocation((data as { id: string }).id, payload);
         return NextResponse.json(data);
       }
     }
@@ -73,6 +110,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    await ensureInitialPickupLocation((data as { id: string }).id, payload);
     return NextResponse.json(data, { status: 201 });
   } catch (err) {
     if (err instanceof ZodError) {

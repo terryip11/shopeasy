@@ -11,6 +11,10 @@ import { completeOrderOnDelivery } from '@/lib/orders/complete-on-delivery';
 import { recordCourierDeliveryEarning } from '@/lib/finance/courier-earnings';
 import { notifyDeliveryClaimed, notifyDeliveryStatus } from '@/lib/push/notify-order';
 import { haversineMeters } from '@/lib/delivery/coords';
+import {
+  normalizePickupCode,
+  parsePickupQrPayload,
+} from '@/lib/delivery/pickup-code';
 import type { DeliveryJobType } from '@/lib/auth/capabilities';
 import type { UserCapability } from '@/lib/auth/capabilities';
 import type { Database } from '@/types/database';
@@ -18,6 +22,16 @@ import type { Database } from '@/types/database';
 type CourierProfile = Database['public']['Tables']['courier_profiles']['Row'];
 type DeliveryJob = Database['public']['Tables']['delivery_jobs']['Row'];
 type DeliveryZone = Database['public']['Tables']['delivery_zones']['Row'];
+
+/** 配送員端不回傳取件碼，避免未掃描即可標記取件 */
+function omitPickupCode(job: DeliveryJob): DeliveryJob {
+  const { pickup_code: _code, ...rest } = job;
+  return { ...rest, pickup_code: '' } as DeliveryJob;
+}
+
+function omitPickupCodes(jobs: DeliveryJob[]): DeliveryJob[] {
+  return jobs.map(omitPickupCode);
+}
 
 export async function getUserCapabilities(userId?: string): Promise<UserCapability[]> {
   const uid = userId ?? (await getAuthUser())?.id;
@@ -126,7 +140,7 @@ export async function getAvailableJobsForCourier(
   });
 
   if (profile.zone_ids.length === 0) {
-    return { jobs: capabilityMatched, outsideZoneCount: 0, zoneNames };
+    return { jobs: omitPickupCodes(capabilityMatched), outsideZoneCount: 0, zoneNames };
   }
 
   const zoneSet = new Set(profile.zone_ids);
@@ -135,7 +149,7 @@ export async function getAvailableJobsForCourier(
     (job) => job.zone_id && !zoneSet.has(job.zone_id)
   ).length;
 
-  return { jobs: inZone, outsideZoneCount, zoneNames };
+  return { jobs: omitPickupCodes(inZone), outsideZoneCount, zoneNames };
 }
 
 export async function getCourierActiveJobs(jobType?: DeliveryJobType): Promise<DeliveryJob[]> {
@@ -156,7 +170,7 @@ export async function getCourierActiveJobs(jobType?: DeliveryJobType): Promise<D
 
   const { data } = await query;
 
-  return (data || []) as DeliveryJob[];
+  return omitPickupCodes((data || []) as DeliveryJob[]);
 }
 
 export async function claimDeliveryJob(jobId: string) {
@@ -169,18 +183,48 @@ export async function claimDeliveryJob(jobId: string) {
     void notifyDeliveryClaimed((data as DeliveryJob).order_id);
   }
 
-  return { data: data as DeliveryJob | null, error };
+  return { data: data ? omitPickupCode(data as DeliveryJob) : null, error };
 }
 
 export async function updateJobStatus(
   jobId: string,
   status: 'picked_up' | 'delivered' | 'failed',
-  location?: { lat: number; lng: number }
+  location?: { lat: number; lng: number },
+  pickupCodeRaw?: string
 ) {
   const user = await getAuthUser();
   if (!user) return { error: new Error('未登入') };
 
   const supabase = await createClient();
+
+  if (status === 'picked_up') {
+    const parsed = parsePickupQrPayload(pickupCodeRaw || '');
+    const submitted = normalizePickupCode(parsed?.code || pickupCodeRaw || '');
+    if (!submitted) {
+      return { error: new Error('請掃描貨件 QR 或輸入取件確認碼') };
+    }
+    if (parsed?.jobId && parsed.jobId !== jobId) {
+      return { error: new Error('此 QR 碼不屬於此配送任務') };
+    }
+
+    const { data: existing } = await supabase
+      .from('delivery_jobs')
+      .select('id, pickup_code, status')
+      .eq('id', jobId)
+      .eq('courier_id', user.id)
+      .eq('status', 'assigned')
+      .maybeSingle();
+
+    const row = existing as { id: string; pickup_code: string; status: string } | null;
+    if (!row) {
+      return { error: new Error('任務不存在或狀態不可取件') };
+    }
+
+    if (normalizePickupCode(row.pickup_code) !== submitted) {
+      return { error: new Error('取件確認碼不正確') };
+    }
+  }
+
   const patch: Record<string, unknown> = { status };
 
   if (status === 'picked_up') patch.picked_up_at = new Date().toISOString();
@@ -217,7 +261,7 @@ export async function updateJobStatus(
     void notifyDeliveryStatus((data as DeliveryJob).order_id, status);
   }
 
-  return { data: data as DeliveryJob | null, error };
+  return { data: data ? omitPickupCode(data as DeliveryJob) : null, error };
 }
 
 export async function updateCourierLocation(jobId: string, lat: number, lng: number) {

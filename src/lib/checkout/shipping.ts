@@ -5,7 +5,11 @@ export const shippingSchema = z.object({
   name: z.string().min(1, '請輸入收件人姓名'),
   phone: z.string().min(8, '請輸入有效聯絡電話'),
   address: z.string().min(5, '請輸入完整收貨地址'),
-  zone_id: z.string().uuid('請選擇配送區域'),
+  /** 買家結帳不必填；配送區域由商家建立配送任務時指定 */
+  zone_id: z
+    .union([z.string().uuid(), z.literal(''), z.null()])
+    .optional()
+    .transform((v) => (v && v.length > 0 ? v : null)),
 });
 
 export const cartItemSchema = z.object({

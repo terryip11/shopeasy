@@ -10,6 +10,7 @@ import type { ProductKind } from '@/lib/merchant/product-kinds';
 import { MERCHANT_TIER_LIMITS, type MerchantTier } from '@/lib/merchant/tier-config';
 import { getCourierMinBaseFees } from '@/lib/finance/platform-settings';
 import { buildProductShippingContext } from '@/lib/merchant/product-shipping-hint';
+import { listPickupLocationsForMerchant } from '@/lib/merchant/pickup-locations';
 import { ProductForm } from '@/components/merchant/product-form';
 import { ArrowLeft } from 'lucide-react';
 
@@ -20,12 +21,13 @@ type PageProps = { params: Promise<{ id: string }> };
 export default async function EditProductPage({ params }: PageProps) {
   const { id } = await params;
   const merchant = await getActiveMerchantForUser();
-  const [product, categories, minFees, extras, menuCategories] = await Promise.all([
+  const [product, categories, minFees, extras, menuCategories, pickupLocations] = await Promise.all([
     getMerchantProduct(id),
     getCategories(100),
     getCourierMinBaseFees().catch(() => ({ food: 0, parcel: 0 })),
     loadProductFormExtras(id).catch(() => ({ variants: [], option_groups: [] })),
     merchant ? listMenuCategories(merchant.id).catch(() => []) : Promise.resolve([]),
+    merchant ? listPickupLocationsForMerchant(merchant.id).catch(() => []) : Promise.resolve([]),
   ]);
   const tier = ((merchant?.tier as MerchantTier) || 'basic');
   const maxImages = MERCHANT_TIER_LIMITS[tier].maxImagesPerProduct;
@@ -53,6 +55,12 @@ export default async function EditProductPage({ params }: PageProps) {
         shippingContext={buildProductShippingContext(merchant, minFees)}
         businessType={businessType}
         menuCategories={menuCategories}
+        pickupLocations={pickupLocations.map((l) => ({
+          id: l.id,
+          name: l.name,
+          address: l.address,
+          is_default: l.is_default,
+        }))}
         initialData={{
           id: product.id,
           name: product.name,
@@ -63,6 +71,7 @@ export default async function EditProductPage({ params }: PageProps) {
           status: product.status,
           checkout_shipping_fee: Number(product.checkout_shipping_fee ?? 0),
           courier_fee: product.courier_fee != null ? Number(product.courier_fee) : null,
+          pickup_location_id: product.pickup_location_id,
           stock: Number(product.stock ?? 0),
           product_kind: (product as { product_kind?: ProductKind }).product_kind,
           menu_category_id: (product as { menu_category_id?: string | null }).menu_category_id,

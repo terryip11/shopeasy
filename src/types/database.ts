@@ -50,7 +50,7 @@ export interface Database {
           name: string;
           phone: string;
           address: string;
-          zone_id: string;
+          zone_id: string | null;
           is_default: boolean;
           created_at: string;
           updated_at: string;
@@ -62,7 +62,7 @@ export interface Database {
           name: string;
           phone: string;
           address: string;
-          zone_id: string;
+          zone_id?: string | null;
           is_default?: boolean;
         };
         Update: {
@@ -70,7 +70,7 @@ export interface Database {
           name?: string;
           phone?: string;
           address?: string;
-          zone_id?: string;
+          zone_id?: string | null;
           is_default?: boolean;
           updated_at?: string;
         };
@@ -90,6 +90,9 @@ export interface Database {
           contact_phone: string | null;
           contact_email: string | null;
           company_address: string | null;
+          default_pickup_address: string | null;
+          default_pickup_contact_name: string | null;
+          default_pickup_contact_phone: string | null;
           br_image_url: string | null;
           ci_image_url: string | null;
           data_consent_at: string | null;
@@ -127,6 +130,9 @@ export interface Database {
           contact_phone?: string | null;
           contact_email?: string | null;
           company_address?: string | null;
+          default_pickup_address?: string | null;
+          default_pickup_contact_name?: string | null;
+          default_pickup_contact_phone?: string | null;
           br_image_url?: string | null;
           ci_image_url?: string | null;
           data_consent_at?: string | null;
@@ -154,6 +160,9 @@ export interface Database {
           contact_phone?: string | null;
           contact_email?: string | null;
           company_address?: string | null;
+          default_pickup_address?: string | null;
+          default_pickup_contact_name?: string | null;
+          default_pickup_contact_phone?: string | null;
           br_image_url?: string | null;
           ci_image_url?: string | null;
           data_consent_at?: string | null;
@@ -297,6 +306,7 @@ export interface Database {
           stock: number;
           checkout_shipping_fee: number;
           courier_fee: number | null;
+          pickup_location_id: string | null;
           product_kind: string;
           menu_category_id: string | null;
           attributes: Json;
@@ -314,6 +324,7 @@ export interface Database {
           stock?: number;
           checkout_shipping_fee?: number;
           courier_fee?: number | null;
+          pickup_location_id?: string | null;
           product_kind?: string;
           menu_category_id?: string | null;
           attributes?: Json;
@@ -329,6 +340,7 @@ export interface Database {
           stock?: number;
           checkout_shipping_fee?: number;
           courier_fee?: number | null;
+          pickup_location_id?: string | null;
           product_kind?: string;
           menu_category_id?: string | null;
           attributes?: Json;
@@ -352,6 +364,41 @@ export interface Database {
           merchant_id?: string;
           name?: string;
           sort_order?: number;
+        };
+      };
+      merchant_pickup_locations: {
+        Row: {
+          id: string;
+          merchant_id: string;
+          name: string;
+          address: string;
+          contact_name: string | null;
+          contact_phone: string | null;
+          is_default: boolean;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          merchant_id: string;
+          name: string;
+          address: string;
+          contact_name?: string | null;
+          contact_phone?: string | null;
+          is_default?: boolean;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          name?: string;
+          address?: string;
+          contact_name?: string | null;
+          contact_phone?: string | null;
+          is_default?: boolean;
+          sort_order?: number;
+          updated_at?: string;
         };
       };
       product_variants: {
@@ -620,6 +667,10 @@ export interface Database {
           status: DeliveryJobStatus;
           courier_id: string | null;
           pickup_address: string | null;
+          pickup_code: string;
+          pickup_contact_name: string | null;
+          pickup_contact_phone: string | null;
+          pickup_location_id: string | null;
           dropoff_address: string | null;
           dropoff_lat: number | null;
           dropoff_lng: number | null;
@@ -649,6 +700,10 @@ export interface Database {
           zone_id?: string | null;
           status?: DeliveryJobStatus;
           pickup_address?: string | null;
+          pickup_code?: string;
+          pickup_contact_name?: string | null;
+          pickup_contact_phone?: string | null;
+          pickup_location_id?: string | null;
           dropoff_address?: string | null;
           dropoff_lat?: number | null;
           dropoff_lng?: number | null;

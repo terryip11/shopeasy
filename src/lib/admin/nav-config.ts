@@ -32,6 +32,7 @@ const financeNav: AdminNavItem[] = [
   { href: '/admin/finance/merchants', label: '商家應付' },
   { href: '/admin/finance/couriers', label: '配送員結算' },
   { href: '/admin/finance/reconciliation', label: '月結對帳' },
+  { href: '/admin/finance/platform-payout', label: '平台收款設定' },
   { href: '/admin/revenue', label: '訂閱收入' },
   { href: '/admin/orders', label: '訂單查詢' },
 ];
@@ -41,6 +42,7 @@ const systemNav: AdminNavItem[] = [
   { href: '/admin/merchants', label: '商家管理' },
   { href: '/admin/affiliate', label: '分享推廣系統' },
   { href: '/admin/finance', label: '交易財務' },
+  { href: '/admin/finance/platform-payout', label: '平台收款設定' },
   { href: '/admin/revenue', label: '訂閱收入' },
   { href: '/admin/orders/trace', label: '訂單流程追查' },
   { href: '/admin/couriers/zones', label: '配送區域設定' },

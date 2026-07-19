@@ -14,6 +14,9 @@ export type MerchantOrderTracking = {
     job_type: string;
     status: string;
     pickup_address: string | null;
+    pickup_code: string;
+    pickup_contact_name: string | null;
+    pickup_contact_phone: string | null;
     dropoff_address: string | null;
     dropoff_lat: number | null;
     dropoff_lng: number | null;

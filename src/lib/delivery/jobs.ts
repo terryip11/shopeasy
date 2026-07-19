@@ -4,7 +4,9 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { capabilityForJobType } from '@/lib/auth/capabilities';
 import type { DeliveryJobType } from '@/lib/auth/capabilities';
 import { resolveDropoffCoordinates } from '@/lib/delivery/geo';
+import { generatePickupCode } from '@/lib/delivery/pickup-code';
 import type { Database } from '@/types/database';
+import { notifyCourierApproved, notifyCourierRejected } from '@/lib/push/notify-courier';
 
 type DeliveryJob = Database['public']['Tables']['delivery_jobs']['Row'];
 
@@ -13,10 +15,18 @@ export async function createDeliveryJobFromOrder(input: {
   jobType: DeliveryJobType;
   zoneId?: string | null;
   pickupAddress?: string;
+  pickupContactName?: string;
+  pickupContactPhone?: string;
+  pickupLocationId?: string | null;
   dropoffAddress?: string;
   notes?: string;
 }) {
   const supabase = createAdminClient();
+
+  const pickupAddress = input.pickupAddress?.trim() || '';
+  if (pickupAddress.length < 5) {
+    return { error: '請填寫取件／發貨地址', job: null };
+  }
 
   const { data: order } = await supabase
     .from('orders')
@@ -55,7 +65,11 @@ export async function createDeliveryJobFromOrder(input: {
       order_id: input.orderId,
       job_type: input.jobType,
       zone_id: input.zoneId || null,
-      pickup_address: input.pickupAddress || null,
+      pickup_address: pickupAddress,
+      pickup_code: generatePickupCode(),
+      pickup_contact_name: input.pickupContactName?.trim() || null,
+      pickup_contact_phone: input.pickupContactPhone?.trim() || null,
+      pickup_location_id: input.pickupLocationId || null,
       dropoff_address: input.dropoffAddress || null,
       dropoff_lat: dropoffCoords?.lat ?? null,
       dropoff_lng: dropoffCoords?.lng ?? null,
@@ -113,6 +127,8 @@ export async function approveCourierApplication(
     .eq('user_id', userId);
 
   if (error) return { error: error.message };
+
+  notifyCourierApproved(userId, jobTypes);
   return { error: null };
 }
 
@@ -135,5 +151,7 @@ export async function rejectCourierApplication(
     .eq('status', 'pending');
 
   if (error) return { error: error.message };
+
+  notifyCourierRejected(userId, reason);
   return { error: null };
 }

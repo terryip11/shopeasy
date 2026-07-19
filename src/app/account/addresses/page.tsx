@@ -4,7 +4,6 @@ import { Navbar } from '@/components/marketing/navbar';
 import { Footer } from '@/components/marketing/footer';
 import { BuyerAddressesManager } from '@/components/buyer/buyer-addresses-manager';
 import { getAuthUser } from '@/lib/auth/server';
-import { getDeliveryZones } from '@/lib/courier/server';
 import { ChevronLeft } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -15,10 +14,8 @@ export default async function AccountAddressesPage() {
     redirect('/login?redirect=/account/addresses');
   }
 
-  const zones = await getDeliveryZones();
-
   return (
-    <div className="min-h-full flex flex-col bg-gray-50 dark:bg-gray-950">
+    <div className="flex min-h-full flex-col bg-gray-50 dark:bg-gray-950">
       <Navbar />
       <main className="mx-auto max-w-3xl flex-1 px-4 py-12 sm:px-6 lg:px-8">
         <Link
@@ -33,7 +30,7 @@ export default async function AccountAddressesPage() {
           管理常用收貨地址，結帳時可快速選擇
         </p>
         <div className="mt-8">
-          <BuyerAddressesManager zones={zones} />
+          <BuyerAddressesManager />
         </div>
       </main>
       <Footer />

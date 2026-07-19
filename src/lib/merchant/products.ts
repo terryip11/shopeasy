@@ -12,6 +12,7 @@ export const productSchema = z.object({
   status: z.enum(['draft', 'published', 'archived']).default('draft'),
   checkout_shipping_fee: z.coerce.number().min(0, '運費不可為負數').max(99999).default(0),
   courier_fee: z.number().min(0, '配送費不可為負數').max(99999).nullable().optional(),
+  pickup_location_id: z.string().uuid().nullable().optional(),
   product_kind: z.enum(PRODUCT_KINDS).optional(),
   menu_category_id: z.string().uuid().nullable().optional(),
   attributes: z.record(z.string(), z.unknown()).optional(),

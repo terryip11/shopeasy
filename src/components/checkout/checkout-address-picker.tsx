@@ -5,18 +5,14 @@ import type { Database } from '@/types/database';
 
 type BuyerAddress = Database['public']['Tables']['buyer_addresses']['Row'];
 
-type Zone = { id: string; name: string };
-
 export type CheckoutShippingFields = {
   name: string;
   phone: string;
   address: string;
-  zone_id: string;
 };
 
 type Props = {
   addresses: BuyerAddress[];
-  zones: Zone[];
   selectedId: string;
   onSelect: (id: string) => void;
   loggedIn: boolean;
@@ -26,15 +22,13 @@ type Props = {
   onAddressLabelChange: (v: string) => void;
 };
 
-function formatAddressLine(addr: BuyerAddress, zones: Zone[]) {
-  const zone = zones.find((z) => z.id === addr.zone_id)?.name ?? '';
+function formatAddressLine(addr: BuyerAddress) {
   const tag = addr.label ? `${addr.label} · ` : '';
-  return `${tag}${addr.name} · ${zone}`;
+  return `${tag}${addr.name}`;
 }
 
 export function CheckoutAddressPicker({
   addresses,
-  zones,
   selectedId,
   onSelect,
   loggedIn,
@@ -85,7 +79,7 @@ export function CheckoutAddressPicker({
             />
             <span>
               <span className="font-medium text-gray-900 dark:text-white">
-                {formatAddressLine(addr, zones)}
+                {formatAddressLine(addr)}
                 {addr.is_default && (
                   <span className="ml-2 text-xs text-orange-600">預設</span>
                 )}
@@ -150,6 +144,5 @@ export function addressToShippingFields(addr: BuyerAddress): CheckoutShippingFie
     name: addr.name,
     phone: addr.phone,
     address: addr.address,
-    zone_id: addr.zone_id,
   };
 }

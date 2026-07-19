@@ -13,21 +13,13 @@ import type { Database } from '@/types/database';
 
 type BuyerAddress = Database['public']['Tables']['buyer_addresses']['Row'];
 
-type Zone = { id: string; name: string };
-
-type Props = {
-  zones: Zone[];
-};
-
-export function BuyerAddressesManager({ zones }: Props) {
+export function BuyerAddressesManager() {
   const router = useRouter();
   const [addresses, setAddresses] = useState<BuyerAddress[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
-
-  const zoneName = (id: string) => zones.find((z) => z.id === id)?.name ?? '—';
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -60,7 +52,7 @@ export function BuyerAddressesManager({ zones }: Props) {
         name: values.name,
         phone: values.phone,
         address: values.address,
-        zone_id: values.zone_id,
+        zone_id: null,
         is_default: values.is_default,
       }),
     });
@@ -80,7 +72,7 @@ export function BuyerAddressesManager({ zones }: Props) {
         name: values.name,
         phone: values.phone,
         address: values.address,
-        zone_id: values.zone_id,
+        zone_id: null,
         is_default: values.is_default,
       }),
     });
@@ -138,9 +130,8 @@ export function BuyerAddressesManager({ zones }: Props) {
 
       {showCreate && (
         <div className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
-          <h2 className="text-lg font-semibold mb-4">新增收貨地址</h2>
+          <h2 className="mb-4 text-lg font-semibold">新增收貨地址</h2>
           <BuyerAddressForm
-            zones={zones}
             submitLabel="新增"
             onSubmit={saveNew}
             onCancel={() => setShowCreate(false)}
@@ -162,66 +153,61 @@ export function BuyerAddressesManager({ zones }: Props) {
             >
               {editingId === addr.id ? (
                 <BuyerAddressForm
-                  zones={zones}
                   initial={buyerAddressToFormValues(addr)}
                   submitLabel="儲存變更"
                   onSubmit={(v) => saveEdit(addr.id, v)}
                   onCancel={() => setEditingId(null)}
                 />
               ) : (
-                <>
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {addr.label || '收貨地址'}
-                        {addr.is_default && (
-                          <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-orange-100 px-2 py-0.5 text-xs text-orange-700 dark:bg-orange-900/30 dark:text-orange-300">
-                            <Star className="h-3 w-3 fill-current" />
-                            預設
-                          </span>
-                        )}
-                      </p>
-                      <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                        {addr.name} · {addr.phone}
-                      </p>
-                      <p className="mt-1 text-sm text-gray-500">
-                        {zoneName(addr.zone_id)} · {addr.address}
-                      </p>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {!addr.is_default && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => void setDefault(addr.id)}
-                        >
-                          設為預設
-                        </Button>
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="font-medium text-gray-900 dark:text-white">
+                      {addr.label || '收貨地址'}
+                      {addr.is_default && (
+                        <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-orange-100 px-2 py-0.5 text-xs text-orange-700 dark:bg-orange-900/30 dark:text-orange-300">
+                          <Star className="h-3 w-3 fill-current" />
+                          預設
+                        </span>
                       )}
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="gap-1"
-                        onClick={() => setEditingId(addr.id)}
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                        編輯
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="gap-1 text-red-600 hover:text-red-700"
-                        onClick={() => void remove(addr.id)}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                        刪除
-                      </Button>
-                    </div>
+                    </p>
+                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                      {addr.name} · {addr.phone}
+                    </p>
+                    <p className="mt-1 text-sm text-gray-500">{addr.address}</p>
                   </div>
-                </>
+                  <div className="flex flex-wrap gap-2">
+                    {!addr.is_default && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => void setDefault(addr.id)}
+                      >
+                        設為預設
+                      </Button>
+                    )}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="gap-1"
+                      onClick={() => setEditingId(addr.id)}
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                      編輯
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="gap-1 text-red-600 hover:text-red-700"
+                      onClick={() => void remove(addr.id)}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      刪除
+                    </Button>
+                  </div>
+                </div>
               )}
             </li>
           ))}

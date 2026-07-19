@@ -5,7 +5,9 @@
 import { getMerchantOrders } from '@/lib/merchant/server';
 import { getDeliveryZones } from '@/lib/courier/server';
 import { getMerchantForUser } from '@/lib/auth/server';
+import { createClient } from '@/lib/supabase/server';
 import { defaultJobTypeForBusinessType } from '@/lib/merchant/business-type';
+import { listPickupLocationsForMerchant } from '@/lib/merchant/pickup-locations';
 import { MerchantOrderActions } from '@/components/merchant/merchant-order-actions';
 import { MerchantDeliveryCell } from '@/components/merchant/merchant-delivery-cell';
 import { MerchantDeliveryJobInfo } from '@/components/merchant/merchant-delivery-job-info';
@@ -13,6 +15,7 @@ import { MerchantOrderStatusBadge } from '@/components/merchant/merchant-order-s
 import { OrderRowProvider } from '@/components/merchant/order-row-context';
 import { parseOrderItems } from '@/lib/orders/types';
 import type { MerchantDeliveryJobSummary } from '@/lib/merchant/delivery-job-summary';
+import type { PickupLocationItem } from '@/components/merchant/merchant-pickup-locations-form';
 import type { Database } from '@/types/database';
 import { Button } from '@/components/ui/button';
 import {
@@ -36,8 +39,34 @@ type OrderItemProps = {
   job: MerchantDeliveryJobSummary | null;
   zones: Zone[];
   defaultJobType: 'food' | 'parcel';
-  defaultPickupAddress: string | null;
+  pickupLocations: PickupLocationItem[];
+  suggestedPickupLocationId: string | null;
+  pickupConflict: boolean;
 };
+
+function suggestPickupForOrder(
+  order: OrderRow,
+  productPickupMap: Map<string, string | null>,
+  defaultLocationId: string | null
+): { suggestedPickupLocationId: string | null; pickupConflict: boolean } {
+  const productIds = parseOrderItems(order.items).map((i) => i.product_id);
+  if (productIds.length === 0) {
+    return { suggestedPickupLocationId: defaultLocationId, pickupConflict: false };
+  }
+
+  const resolved = productIds.map((id) => {
+    const bound = productPickupMap.get(id);
+    return bound || defaultLocationId;
+  });
+  const distinct = [...new Set(resolved.filter(Boolean))] as string[];
+  if (distinct.length <= 1) {
+    return {
+      suggestedPickupLocationId: distinct[0] ?? defaultLocationId,
+      pickupConflict: false,
+    };
+  }
+  return { suggestedPickupLocationId: defaultLocationId, pickupConflict: true };
+}
 
 function formatOrderMeta(order: OrderRow) {
   const items = parseOrderItems(order.items);
@@ -57,7 +86,9 @@ function MerchantOrderMobileCard({
   job,
   zones,
   defaultJobType,
-  defaultPickupAddress,
+  pickupLocations,
+  suggestedPickupLocationId,
+  pickupConflict,
 }: OrderItemProps) {
   const { itemSummary, formattedDate } = formatOrderMeta(order);
 
@@ -106,7 +137,9 @@ function MerchantOrderMobileCard({
                 shippingZoneId={order.shipping_zone_id}
                 zones={zones}
                 defaultJobType={defaultJobType}
-                defaultPickupAddress={defaultPickupAddress}
+                pickupLocations={pickupLocations}
+                suggestedPickupLocationId={suggestedPickupLocationId}
+                pickupConflict={pickupConflict}
               />
             </dd>
           </div>
@@ -142,7 +175,9 @@ function MerchantOrderDesktopRow({
   job,
   zones,
   defaultJobType,
-  defaultPickupAddress,
+  pickupLocations,
+  suggestedPickupLocationId,
+  pickupConflict,
 }: OrderItemProps) {
   const { itemSummary, formattedDate } = formatOrderMeta(order);
 
@@ -178,7 +213,9 @@ function MerchantOrderDesktopRow({
             shippingZoneId={order.shipping_zone_id}
             zones={zones}
             defaultJobType={defaultJobType}
-            defaultPickupAddress={defaultPickupAddress}
+            pickupLocations={pickupLocations}
+            suggestedPickupLocationId={suggestedPickupLocationId}
+            pickupConflict={pickupConflict}
           />
         </TableCell>
         <TableCell className="text-sm whitespace-nowrap">{formattedDate}</TableCell>
@@ -214,14 +251,41 @@ export default async function OrdersPage() {
     ]);
 
   const defaultJobType = defaultJobTypeForBusinessType(merchant?.business_type);
-  const defaultPickupAddress = merchant?.company_address ?? null;
+  const pickupLocations = merchant
+    ? (await listPickupLocationsForMerchant(merchant.id)).map((l) => ({
+        id: l.id,
+        name: l.name,
+        address: l.address,
+        contact_name: l.contact_name,
+        contact_phone: l.contact_phone,
+        is_default: l.is_default,
+      }))
+    : [];
+  const defaultLocationId =
+    pickupLocations.find((l) => l.is_default)?.id ?? pickupLocations[0]?.id ?? null;
+
+  const productPickupMap = new Map<string, string | null>();
+  if (merchant) {
+    const supabase = await createClient();
+    const { data: productRows } = await supabase
+      .from('products')
+      .select('id, pickup_location_id')
+      .eq('merchant_id', merchant.id);
+    for (const row of (productRows || []) as {
+      id: string;
+      pickup_location_id: string | null;
+    }[]) {
+      productPickupMap.set(row.id, row.pickup_location_id);
+    }
+  }
 
   const listProps = (order: OrderRow): OrderItemProps => ({
     order,
     job: deliveryJobs[order.id] ?? null,
     zones,
     defaultJobType,
-    defaultPickupAddress,
+    pickupLocations,
+    ...suggestPickupForOrder(order, productPickupMap, defaultLocationId),
   });
 
   return (

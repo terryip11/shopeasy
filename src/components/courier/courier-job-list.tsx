@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { CourierPickupScanDialog } from '@/components/courier/courier-pickup-scan-dialog';
 import { DELIVERY_JOB_STATUS_LABELS } from '@/lib/courier/types';
 import { JOB_TYPE_LABELS } from '@/lib/auth/capabilities';
 import {
@@ -12,7 +13,7 @@ import {
 import { haversineMeters, type GeoPoint } from '@/lib/delivery/coords';
 import type { DeliveryJobType } from '@/lib/auth/capabilities';
 import type { DeliveryJobWithPayout } from '@/lib/delivery/enrich-job-payout';
-import { DollarSign } from 'lucide-react';
+import { DollarSign, MapPin } from 'lucide-react';
 
 interface CourierJobListProps {
   available: DeliveryJobWithPayout[];
@@ -33,11 +34,17 @@ export function CourierJobList({
 }: CourierJobListProps) {
   const router = useRouter();
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [scanJobId, setScanJobId] = useState<string | null>(null);
   const lastReportedRef = useRef<Map<string, GeoPoint>>(new Map());
 
   const activeJobs = useMemo(
     () => mine.filter((j) => ['assigned', 'picked_up'].includes(j.status)),
     [mine]
+  );
+
+  const scanJob = useMemo(
+    () => (scanJobId ? mine.find((j) => j.id === scanJobId) ?? null : null),
+    [mine, scanJobId]
   );
 
   const getCurrentPosition = (): Promise<GeoPoint | null> =>
@@ -104,7 +111,11 @@ export function CourierJobList({
     setLoadingId(null);
   };
 
-  const updateStatus = async (jobId: string, status: 'picked_up' | 'delivered') => {
+  const updateStatus = async (
+    jobId: string,
+    status: 'picked_up' | 'delivered',
+    pickupCode?: string
+  ) => {
     setLoadingId(jobId);
     const pos = await getCurrentPosition();
     const res = await fetch(`/api/courier/jobs/${jobId}/status`, {
@@ -113,20 +124,24 @@ export function CourierJobList({
       body: JSON.stringify({
         status,
         ...(pos ? { lat: pos.lat, lng: pos.lng } : {}),
+        ...(pickupCode ? { pickup_code: pickupCode } : {}),
       }),
     });
     if (!res.ok) {
       const data = await res.json();
       alert(data.error || '更新失敗');
-    } else {
-      if (status === 'delivered') {
-        lastReportedRef.current.delete('all');
-      } else if (pos) {
-        lastReportedRef.current.set('all', pos);
-      }
-      router.refresh();
+      setLoadingId(null);
+      return false;
     }
+    if (status === 'delivered') {
+      lastReportedRef.current.delete('all');
+    } else if (pos) {
+      lastReportedRef.current.set('all', pos);
+    }
+    setScanJobId(null);
+    router.refresh();
     setLoadingId(null);
+    return true;
   };
 
   const accentBorder =
@@ -184,13 +199,31 @@ export function CourierJobList({
                 className={`rounded-xl border bg-white p-4 dark:bg-gray-800 ${accentBorder}`}
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <p className="font-medium">{JOB_TYPE_LABELS[job.job_type]}</p>
                     <p className="text-sm text-gray-500 mt-1">
                       狀態：{DELIVERY_JOB_STATUS_LABELS[job.status]}
                     </p>
+                    {job.status === 'assigned' && job.pickup_address && (
+                      <div className="mt-2 rounded-lg bg-orange-50 px-3 py-2 text-sm text-orange-900 dark:bg-orange-950/40 dark:text-orange-200">
+                        <p className="flex items-start gap-2 font-medium">
+                          <MapPin className="mt-0.5 h-4 w-4 shrink-0" />
+                          <span>取件：{job.pickup_address}</span>
+                        </p>
+                        {(job.pickup_contact_name || job.pickup_contact_phone) && (
+                          <p className="mt-1 pl-6 text-xs opacity-90">
+                            聯絡
+                            {job.pickup_contact_name ? ` ${job.pickup_contact_name}` : ''}
+                            {job.pickup_contact_phone ? ` · ${job.pickup_contact_phone}` : ''}
+                          </p>
+                        )}
+                      </div>
+                    )}
                     {job.dropoff_address && (
-                      <p className="text-sm text-gray-600 mt-1">送達：{job.dropoff_address}</p>
+                      <p className="mt-2 flex items-start gap-2 text-sm text-gray-600 dark:text-gray-300">
+                        <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
+                        <span>送達：{job.dropoff_address}</span>
+                      </p>
                     )}
                     <PayoutBadge job={job} />
                   </div>
@@ -199,10 +232,10 @@ export function CourierJobList({
                       <Button
                         size="sm"
                         className="min-h-10 px-4"
-                        onClick={() => updateStatus(job.id, 'picked_up')}
+                        onClick={() => setScanJobId(job.id)}
                         disabled={loadingId === job.id}
                       >
-                        已取件
+                        掃描取件
                       </Button>
                     )}
                     {job.status === 'picked_up' && (
@@ -252,7 +285,16 @@ export function CourierJobList({
                     <p className="font-medium">{JOB_TYPE_LABELS[job.job_type]}</p>
                     <p className="text-xs text-gray-500 mt-1">訂單 #{job.order_id.slice(0, 8)}</p>
                     {job.pickup_address && (
-                      <p className="text-sm text-gray-600 mt-1">取件：{job.pickup_address}</p>
+                      <div className="mt-1 text-sm text-gray-600">
+                        <p>取件：{job.pickup_address}</p>
+                        {(job.pickup_contact_name || job.pickup_contact_phone) && (
+                          <p className="text-xs text-gray-500">
+                            聯絡
+                            {job.pickup_contact_name ? ` ${job.pickup_contact_name}` : ''}
+                            {job.pickup_contact_phone ? ` · ${job.pickup_contact_phone}` : ''}
+                          </p>
+                        )}
+                      </div>
                     )}
                     {job.dropoff_address && (
                       <p className="text-sm text-gray-600">送達：{job.dropoff_address}</p>
@@ -273,6 +315,20 @@ export function CourierJobList({
           </ul>
         )}
       </section>
+
+      <CourierPickupScanDialog
+        jobId={scanJob?.id || ''}
+        pickupAddress={scanJob?.pickup_address}
+        pickupContactName={scanJob?.pickup_contact_name}
+        pickupContactPhone={scanJob?.pickup_contact_phone}
+        open={!!scanJob}
+        loading={loadingId === scanJob?.id}
+        onClose={() => setScanJobId(null)}
+        onConfirm={(code) => {
+          if (!scanJob) return;
+          void updateStatus(scanJob.id, 'picked_up', code);
+        }}
+      />
     </div>
   );
 }

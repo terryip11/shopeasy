@@ -6,6 +6,8 @@ import { createDeliveryJobFromOrder } from '@/lib/delivery/jobs';
 import { recordOrderLedger } from '@/lib/finance/ledger';
 import { notifyOrdersPaid } from '@/lib/push/notify-order';
 import { defaultJobTypeForBusinessType } from '@/lib/merchant/business-type';
+import { resolvePickupForOrderItems } from '@/lib/merchant/pickup-locations';
+import { parseOrderItems } from '@/lib/orders/types';
 import type { MerchantBusinessType } from '@/types/database';
 
 type OrderRow = {
@@ -14,11 +16,17 @@ type OrderRow = {
   shipping_address: string | null;
   shipping_zone_id: string | null;
   merchant_id: string;
+  items: unknown;
 };
 
 type MerchantDeliveryDefaults = {
   business_type: MerchantBusinessType;
   company_address: string | null;
+  default_pickup_address: string | null;
+  default_pickup_contact_name: string | null;
+  default_pickup_contact_phone: string | null;
+  contact_name: string | null;
+  contact_phone: string | null;
 };
 
 export type MarkOrdersPaidResult = {
@@ -37,7 +45,7 @@ export async function markOrdersPaid(
 
   const { data: orders } = await supabase
     .from('orders')
-    .select('id, status, shipping_address, shipping_zone_id, merchant_id')
+    .select('id, status, shipping_address, shipping_zone_id, merchant_id, items')
     .in('id', orderIds);
 
   const pendingIds = ((orders || []) as OrderRow[])
@@ -96,13 +104,20 @@ export async function markOrdersPaid(
   if (merchantIds.length > 0) {
     const { data: merchants } = await supabase
       .from('merchants')
-      .select('id, business_type, company_address')
+      .select(
+        'id, business_type, company_address, default_pickup_address, default_pickup_contact_name, default_pickup_contact_phone, contact_name, contact_phone'
+      )
       .in('id', merchantIds);
 
     for (const m of (merchants || []) as (MerchantDeliveryDefaults & { id: string })[]) {
       merchantDefaults.set(m.id, {
         business_type: m.business_type ?? 'retail',
         company_address: m.company_address,
+        default_pickup_address: m.default_pickup_address,
+        default_pickup_contact_name: m.default_pickup_contact_name,
+        default_pickup_contact_phone: m.default_pickup_contact_phone,
+        contact_name: m.contact_name,
+        contact_phone: m.contact_phone,
       });
     }
   }
@@ -110,18 +125,43 @@ export async function markOrdersPaid(
   let deliveryJobs = 0;
   for (const order of (orders || []) as OrderRow[]) {
     if (!actuallyUpdated.includes(order.id) || !order.shipping_address) continue;
+    // 買家結帳不強制選區域；無 zone 時改由商家手動「建立配送」並指定區域
+    if (!order.shipping_zone_id) continue;
 
     const merchant = merchantDefaults.get(order.merchant_id);
     const jobType = defaultJobTypeForBusinessType(merchant?.business_type);
-    const pickupAddress = merchant?.company_address?.trim() || undefined;
+    const productIds = parseOrderItems(order.items).map((i) => i.product_id);
+    const pickup = await resolvePickupForOrderItems(
+      order.merchant_id,
+      productIds,
+      merchant,
+      { admin: true }
+    );
+    if (!pickup.address) {
+      const msg = `[markOrdersPaid] delivery ${order.id}: 商家尚未設定取件點，略過自動建配送`;
+      console.error(msg);
+      errors.push(msg);
+      continue;
+    }
+
+    const notes = [
+      '買家結帳時自動建立',
+      pickup.note,
+      pickup.locationName ? `取件點：${pickup.locationName}` : null,
+    ]
+      .filter(Boolean)
+      .join('；');
 
     const result = await createDeliveryJobFromOrder({
       orderId: order.id,
       jobType,
       zoneId: order.shipping_zone_id,
-      pickupAddress,
+      pickupAddress: pickup.address,
+      pickupContactName: pickup.contactName || undefined,
+      pickupContactPhone: pickup.contactPhone || undefined,
+      pickupLocationId: pickup.locationId,
       dropoffAddress: order.shipping_address,
-      notes: '買家結帳時自動建立',
+      notes,
     });
 
     if (result.error) {

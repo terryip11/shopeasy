@@ -48,6 +48,12 @@ interface ProductFormProps {
   shippingContext: ProductShippingContext;
   businessType: MerchantBusinessType;
   menuCategories?: MenuCategory[];
+  pickupLocations?: Array<{
+    id: string;
+    name: string;
+    address: string;
+    is_default: boolean;
+  }>;
 }
 
 export function ProductForm({
@@ -58,6 +64,7 @@ export function ProductForm({
   shippingContext,
   businessType,
   menuCategories: initialMenuCategories = [],
+  pickupLocations = [],
 }: ProductFormProps) {
   const router = useRouter();
   const [name, setName] = useState(initialData?.name || '');
@@ -73,6 +80,9 @@ export function ProductForm({
   );
   const [courierFee, setCourierFee] = useState(
     initialData?.courier_fee != null ? String(initialData.courier_fee) : ''
+  );
+  const [pickupLocationId, setPickupLocationId] = useState(
+    initialData?.pickup_location_id ?? ''
   );
   const [images, setImages] = useState<string[]>(initialData?.images || []);
   const [productKind, setProductKind] = useState<ProductKind>(
@@ -156,6 +166,7 @@ export function ProductForm({
       status,
       checkout_shipping_fee: shippingFee,
       courier_fee: productCourierFee,
+      pickup_location_id: pickupLocationId || null,
       product_kind: productKind,
       menu_category_id: isFood && menuCategoryId ? menuCategoryId : null,
       attributes: isFood ? foodAttributes : retailAttributes,
@@ -362,6 +373,28 @@ export function ProductForm({
               {minBase > 0 && `；平台保底 HK$${minBase}`}
             </p>
           </div>
+        </div>
+
+        <div>
+          <Label htmlFor="pickup-location">發貨取件點</Label>
+          <select
+            id="pickup-location"
+            value={pickupLocationId}
+            onChange={(e) => setPickupLocationId(e.target.value)}
+            className="mt-1 w-full rounded-xl border border-gray-200 px-4 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
+          >
+            <option value="">使用店鋪預設取件點</option>
+            {pickupLocations.map((loc) => (
+              <option key={loc.id} value={loc.id}>
+                {loc.name}
+                {loc.is_default ? '（預設）' : ''} — {loc.address}
+              </option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-gray-400">
+            配送員會前往此地址取件。可在「店鋪設置 → 取件點管理」新增更多地址。
+            {pickupLocations.length === 0 && ' 目前尚未設定取件點。'}
+          </p>
         </div>
 
         {(shippingPreview.belowMin || shippingPreview.shippingBelowCourier) && (

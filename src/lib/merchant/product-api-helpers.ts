@@ -16,6 +16,9 @@ function productColumnHint(msg: string): string | null {
   if (msg.includes('checkout_shipping_fee') || msg.includes('courier_fee')) {
     return '資料庫尚未加入商品運費欄位，請執行 supabase/migrate-v29-product-shipping-fees.sql';
   }
+  if (msg.includes('pickup_location_id')) {
+    return '資料庫尚未加入商品取件點欄位，請執行 supabase/migrate-v49-product-pickup-location.sql';
+  }
   if (msg.includes('product_kind') || msg.includes('attributes') || msg.includes('menu_category')) {
     return '資料庫尚未加入商品行業欄位，請執行 supabase/migrate-v36-product-kind-attributes.sql';
   }
@@ -47,6 +50,7 @@ export async function buildProductInsertPayload(
       status: parsed.status,
       checkout_shipping_fee: parsed.checkout_shipping_fee,
       courier_fee: parsed.courier_fee ?? null,
+      pickup_location_id: parsed.pickup_location_id ?? null,
       product_kind: productKind,
       menu_category_id: parsed.menu_category_id ?? null,
       attributes: parsed.attributes ?? {},

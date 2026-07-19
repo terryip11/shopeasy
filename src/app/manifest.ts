@@ -14,6 +14,13 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: '#f97316',
     lang: 'zh-TW',
     categories: ['shopping', 'food'],
+    prefer_related_applications: false,
+    related_applications: [
+      {
+        platform: 'webapp',
+        url: '/manifest.webmanifest',
+      },
+    ],
     icons: [
       {
         src: '/pwa/icon-192',

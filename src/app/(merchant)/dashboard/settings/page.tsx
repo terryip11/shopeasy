@@ -20,9 +20,11 @@ import {
 } from '@/components/ui/card';
 import { MerchantCourierFeesForm } from '@/components/merchant/merchant-courier-fees-form';
 import { MerchantBusinessTypeForm } from '@/components/merchant/merchant-business-type-form';
+import { MerchantPickupLocationsForm } from '@/components/merchant/merchant-pickup-locations-form';
 import { MerchantDeliveryZonesCollapsible } from '@/components/merchant/merchant-delivery-zones-collapsible';
 import { DEFAULT_COURIER_FEE_BY_JOB_TYPE } from '@/lib/finance/config';
 import { normalizeBusinessType } from '@/lib/merchant/business-type';
+import { listPickupLocationsForMerchant } from '@/lib/merchant/pickup-locations';
 import { isStripePaymentsEnabled } from '@/lib/payment/stripe';
 import { ArrowLeft, Store, Truck, CreditCard, Wallet } from 'lucide-react';
 import Link from 'next/link';
@@ -32,6 +34,7 @@ export const dynamic = 'force-dynamic';
 async function getStoreSettings() {
   const merchant = await getMerchantForUser();
   if (!merchant) return null;
+  const pickupLocations = await listPickupLocationsForMerchant(merchant.id);
   return {
     name: merchant.name,
     slug: merchant.slug,
@@ -45,6 +48,14 @@ async function getStoreSettings() {
     courierFeeFood: Number(merchant.courier_fee_food ?? DEFAULT_COURIER_FEE_BY_JOB_TYPE.food),
     courierFeeParcel: Number(merchant.courier_fee_parcel ?? DEFAULT_COURIER_FEE_BY_JOB_TYPE.parcel),
     businessType: normalizeBusinessType(merchant.business_type),
+    pickupLocations: pickupLocations.map((l) => ({
+      id: l.id,
+      name: l.name,
+      address: l.address,
+      contact_name: l.contact_name,
+      contact_phone: l.contact_phone,
+      is_default: l.is_default,
+    })),
   };
 }
 
@@ -122,12 +133,13 @@ export default async function SettingsPage() {
               <div>
                 <CardTitle>配送設置</CardTitle>
                 <CardDescription>
-                  配送員預設工資與配送區域（各商品可另行覆寫運費與工資）
+                  取件點、配送員工資與配送區域（各商品可另行覆寫運費與工資）
                 </CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
+            <MerchantPickupLocationsForm initialLocations={storeSettings.pickupLocations} />
             <MerchantBusinessTypeForm initialBusinessType={storeSettings.businessType} />
             <MerchantCourierFeesForm
               initialFoodFee={storeSettings.courierFeeFood}
