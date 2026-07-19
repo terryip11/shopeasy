@@ -198,7 +198,7 @@ export function getTableSchema(table: TableName) {
     products: ['id', 'name', 'price', 'stock', 'images', 'merchant_id', 'status'],
     merchants: ['id', 'name', 'slug', 'user_id', 'status', 'contact_name', 'contact_phone', 'applied_at'],
     orders: ['id', 'total', 'status', 'tracking_number', 'user_id', 'merchant_id'],
-    categories: ['id', 'name', 'slug'],
+    categories: ['id', 'name', 'slug', 'sort_order'],
   };
   return schemas[table] || [];
 }

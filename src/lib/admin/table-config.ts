@@ -14,6 +14,7 @@ export const TABLE_FIELDS: Record<TableName, TableField[]> = {
   categories: [
     { key: 'name', label: '名稱', type: 'text', required: true },
     { key: 'slug', label: '網址代稱', type: 'text', required: true },
+    { key: 'sort_order', label: '排序（越小越前）', type: 'number' },
   ],
   products: [
     { key: 'name', label: '商品名稱', type: 'text', required: true },

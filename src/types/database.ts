@@ -115,6 +115,7 @@ export interface Database {
           checkout_shipping_fee: number;
           business_type: MerchantBusinessType;
           tier: MerchantTier;
+          platform_credit_balance: number;
           stripe_subscription_id: string | null;
           tier_period_end: string | null;
           created_at: string;
@@ -545,16 +546,20 @@ export interface Database {
           id: string;
           name: string;
           slug: string;
+          sort_order: number;
           created_at: string;
         };
         Insert: {
           id?: string;
           name: string;
           slug: string;
+          sort_order?: number;
+          created_at?: string;
         };
         Update: {
           name?: string;
           slug?: string;
+          sort_order?: number;
         };
       };
       admin_audit_log: {

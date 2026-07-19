@@ -14,27 +14,38 @@ interface CategoryGridProps {
   categories: Category[];
 }
 
-// Category icons mapping
 const categoryIcons: Record<string, string> = {
+  food: '🍱',
+  'drinks-desserts': '🧋',
+  grocery: '🛒',
   electronics: '⚡',
   fashion: '👕',
-  home: '🏠',
   beauty: '✨',
+  home: '🏠',
+  'baby-kids': '👶',
+  pets: '🐾',
   sports: '⚽',
-  books: '📚',
-  food: '🍔',
-  toys: '🧸',
+  health: '💊',
+  gifts: '🎁',
+  hobbies: '🧸',
+  other: '📦',
 };
 
 const categoryColors: Record<string, string> = {
+  food: 'from-red-50 to-orange-100 dark:from-red-900/20 dark:to-orange-800/20',
+  'drinks-desserts': 'from-amber-50 to-rose-100 dark:from-amber-900/20 dark:to-rose-800/20',
+  grocery: 'from-lime-50 to-green-100 dark:from-lime-900/20 dark:to-green-800/20',
   electronics: 'from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20',
   fashion: 'from-pink-50 to-pink-100 dark:from-pink-900/20 dark:to-pink-800/20',
-  home: 'from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20',
-  beauty: 'from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20',
+  beauty: 'from-fuchsia-50 to-purple-100 dark:from-fuchsia-900/20 dark:to-purple-800/20',
+  home: 'from-emerald-50 to-teal-100 dark:from-emerald-900/20 dark:to-teal-800/20',
+  'baby-kids': 'from-sky-50 to-cyan-100 dark:from-sky-900/20 dark:to-cyan-800/20',
+  pets: 'from-yellow-50 to-amber-100 dark:from-yellow-900/20 dark:to-amber-800/20',
   sports: 'from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20',
-  books: 'from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20',
-  food: 'from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20',
-  toys: 'from-cyan-50 to-cyan-100 dark:from-cyan-900/20 dark:to-cyan-800/20',
+  health: 'from-teal-50 to-emerald-100 dark:from-teal-900/20 dark:to-emerald-800/20',
+  gifts: 'from-rose-50 to-pink-100 dark:from-rose-900/20 dark:to-pink-800/20',
+  hobbies: 'from-cyan-50 to-indigo-100 dark:from-cyan-900/20 dark:to-indigo-800/20',
+  other: 'from-gray-50 to-slate-100 dark:from-gray-800/20 dark:to-slate-700/20',
 };
 
 function getCategoryIcon(slug: string): string {

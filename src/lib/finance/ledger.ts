@@ -5,6 +5,12 @@ import { allocateInfraCostForOrder } from '@/lib/finance/infra-allocation';
 import { getPlatformFeeRate, roundMoney } from '@/lib/finance/config';
 import { resolveStripeFeeHkd } from '@/lib/finance/stripe-fee';
 import { recordAffiliateCommission, reverseAffiliateCommission } from '@/lib/affiliate/commission';
+import {
+  deductPlatformCreditForOrder,
+  refundPlatformCreditForOrder,
+} from '@/lib/finance/platform-credit';
+import { isManualPaymentMethod } from '@/lib/checkout/payment-options';
+import type { MerchantPaymentMethod } from '@/lib/merchant/payment-methods';
 
 type OrderRow = {
   id: string;
@@ -101,6 +107,23 @@ export async function recordOrderLedger(
     platformFeeAmount - infraCostAllocated + affiliatePlatformFee
   );
 
+  const method = paymentMethod as MerchantPaymentMethod;
+  const needsCreditDeduct = isManualPaymentMethod(method) && platformFeeAmount > 0;
+
+  if (needsCreditDeduct) {
+    const credit = await deductPlatformCreditForOrder(
+      row.merchant_id,
+      orderId,
+      platformFeeAmount
+    );
+    if (!credit.ok) {
+      return {
+        ok: false,
+        error: credit.error || '預付餘額扣款失敗',
+      };
+    }
+  }
+
   const { error: insertError } = await (supabase as any).from('order_ledger').insert({
     order_id: orderId,
     merchant_id: row.merchant_id,
@@ -122,6 +145,9 @@ export async function recordOrderLedger(
   });
 
   if (insertError) {
+    if (needsCreditDeduct) {
+      await refundPlatformCreditForOrder(orderId);
+    }
     if (insertError.message?.includes('order_ledger')) {
       return {
         ok: false,
@@ -186,6 +212,7 @@ export async function syncLedgerStripeFees(): Promise<void> {
 export async function reverseOrderLedger(orderId: string): Promise<void> {
   const supabase = createAdminClient();
   await reverseAffiliateCommission(orderId);
+  await refundPlatformCreditForOrder(orderId);
   await (supabase as any)
     .from('order_ledger')
     .update({ settlement_status: 'reversed' })

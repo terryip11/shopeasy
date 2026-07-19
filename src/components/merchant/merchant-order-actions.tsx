@@ -105,7 +105,14 @@ export function MerchantOrderActions({
       setStatus('paid');
       refreshOrdersPage();
     } else {
-      alert(data.error || '確認失敗');
+      const msg = data.error || '確認失敗';
+      if (String(msg).includes('預付餘額') || String(msg).includes('平台服務費')) {
+        if (confirm(`${msg}\n\n是否前往「平台服務費」儲值？`)) {
+          router.push('/dashboard/credits');
+        }
+      } else {
+        alert(msg);
+      }
     }
     setLoading(null);
   };
@@ -133,63 +140,70 @@ export function MerchantOrderActions({
     process.env.NODE_ENV === 'development' && status === 'pending' && !isManualPending;
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-col items-stretch gap-1 sm:items-start">
+      <div className="flex flex-wrap items-center gap-2">
+        {isManualPending && (
+          <>
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-green-300 text-green-700"
+              onClick={handleConfirmPaid}
+              disabled={loading !== null}
+            >
+              {loading === 'confirmPaid' ? '處理中...' : paymentClaimed ? '確認已收款' : '標記已收款'}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-gray-600 hover:text-red-600"
+              onClick={handleCancelPending}
+              disabled={loading !== null}
+            >
+              <XCircle className="mr-1 h-4 w-4" />
+              {loading === 'cancel' ? '處理中...' : '取消訂單'}
+            </Button>
+          </>
+        )}
+        {showDevMarkPaid && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-amber-700 border-amber-300"
+            onClick={handleMarkPaid}
+            disabled={loading !== null}
+          >
+            {loading === 'markPaid' ? '處理中...' : '標記已付款（開發）'}
+          </Button>
+        )}
+        {status === 'paid' && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleShip}
+            disabled={loading !== null}
+          >
+            <Truck className="h-4 w-4 mr-1" />
+            {loading === 'ship' ? '處理中...' : '標記發貨'}
+          </Button>
+        )}
+        {(status === 'paid' || status === 'shipped' || status === 'refund_requested') && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-red-600 hover:text-red-700"
+            onClick={handleRefund}
+            disabled={loading !== null}
+          >
+            <RotateCcw className="h-4 w-4 mr-1" />
+            {loading === 'refund' ? '退款中...' : status === 'refund_requested' ? '核准退款' : '退款'}
+          </Button>
+        )}
+      </div>
       {isManualPending && (
-        <>
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-green-300 text-green-700"
-            onClick={handleConfirmPaid}
-            disabled={loading !== null}
-          >
-            {loading === 'confirmPaid' ? '處理中...' : paymentClaimed ? '確認已收款' : '標記已收款'}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-gray-600 hover:text-red-600"
-            onClick={handleCancelPending}
-            disabled={loading !== null}
-          >
-            <XCircle className="mr-1 h-4 w-4" />
-            {loading === 'cancel' ? '處理中...' : '取消訂單'}
-          </Button>
-        </>
-      )}
-      {showDevMarkPaid && (
-        <Button
-          variant="outline"
-          size="sm"
-          className="text-amber-700 border-amber-300"
-          onClick={handleMarkPaid}
-          disabled={loading !== null}
-        >
-          {loading === 'markPaid' ? '處理中...' : '標記已付款（開發）'}
-        </Button>
-      )}
-      {status === 'paid' && (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleShip}
-          disabled={loading !== null}
-        >
-          <Truck className="h-4 w-4 mr-1" />
-          {loading === 'ship' ? '處理中...' : '標記發貨'}
-        </Button>
-      )}
-      {(status === 'paid' || status === 'shipped' || status === 'refund_requested') && (
-        <Button
-          variant="outline"
-          size="sm"
-          className="text-red-600 hover:text-red-700"
-          onClick={handleRefund}
-          disabled={loading !== null}
-        >
-          <RotateCcw className="h-4 w-4 mr-1" />
-          {loading === 'refund' ? '退款中...' : status === 'refund_requested' ? '核准退款' : '退款'}
-        </Button>
+        <p className="text-[11px] text-gray-500">
+          確認收款會扣除平台服務費預付餘額；不足請先至「平台服務費」儲值。
+        </p>
       )}
     </div>
   );

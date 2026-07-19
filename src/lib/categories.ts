@@ -16,7 +16,8 @@ export async function getCategories(limit = 6): Promise<Category[]> {
   const { data, error } = await supabase
     .from('categories')
     .select('*')
-    .order('name')
+    .order('sort_order', { ascending: true })
+    .order('name', { ascending: true })
     .limit(limit);
 
   if (error) {

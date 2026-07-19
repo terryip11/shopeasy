@@ -21,7 +21,9 @@ import {
   Store,
 } from 'lucide-react';
 import { MerchantDeliveryJobInfo } from '@/components/merchant/merchant-delivery-job-info';
+import { MerchantCreditBanner } from '@/components/merchant/merchant-credit-banner';
 import { OrderStatusBadge } from '@/components/orders/order-status-badge';
+import { getMerchantPlatformCreditBalance } from '@/lib/finance/platform-credit';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,7 +40,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   }
 
   const merchant = await getActiveMerchantForUser();
-  const [stats, tierInfo, tierPrices] = await Promise.all([
+  const [stats, tierInfo, tierPrices, creditBalance] = await Promise.all([
     getMerchantDashboardStats(),
     merchant
       ? getMerchantTierInfo(merchant.id, (merchant.tier as MerchantTier) || 'basic', {
@@ -47,6 +49,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
         })
       : null,
     getTierMonthlyPrices(),
+    merchant ? getMerchantPlatformCreditBalance(merchant.id) : Promise.resolve(0),
   ]);
 
   const statCards = [
@@ -78,6 +81,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
 
   return (
     <div className="space-y-8">
+      {merchant && <MerchantCreditBanner balance={creditBalance} />}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">儀表板</h1>

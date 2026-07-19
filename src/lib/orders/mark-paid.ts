@@ -4,6 +4,10 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { deductStockForOrders } from '@/lib/inventory';
 import { createDeliveryJobFromOrder } from '@/lib/delivery/jobs';
 import { recordOrderLedger } from '@/lib/finance/ledger';
+import {
+  assertMerchantCanCoverOfflineFee,
+  estimateOfflinePlatformFeeForOrder,
+} from '@/lib/finance/platform-credit';
 import { notifyOrdersPaid } from '@/lib/push/notify-order';
 import { defaultJobTypeForBusinessType } from '@/lib/merchant/business-type';
 import { resolvePickupForOrderItems } from '@/lib/merchant/pickup-locations';
@@ -17,6 +21,8 @@ type OrderRow = {
   shipping_zone_id: string | null;
   merchant_id: string;
   items: unknown;
+  payment_method: string | null;
+  total: number;
 };
 
 type MerchantDeliveryDefaults = {
@@ -45,14 +51,25 @@ export async function markOrdersPaid(
 
   const { data: orders } = await supabase
     .from('orders')
-    .select('id, status, shipping_address, shipping_zone_id, merchant_id, items')
+    .select('id, status, shipping_address, shipping_zone_id, merchant_id, items, payment_method, total')
     .in('id', orderIds);
 
-  const pendingIds = ((orders || []) as OrderRow[])
-    .filter((o) => o.status === 'pending')
-    .map((o) => o.id);
+  const pendingOrders = ((orders || []) as OrderRow[]).filter((o) => o.status === 'pending');
 
-  if (pendingIds.length === 0) {
+  const eligibleIds: string[] = [];
+  for (const order of pendingOrders) {
+    const estimate = await estimateOfflinePlatformFeeForOrder(order.id);
+    if (estimate.isOffline && estimate.merchantId && estimate.fee > 0) {
+      const check = await assertMerchantCanCoverOfflineFee(estimate.merchantId, estimate.fee);
+      if (!check.ok) {
+        errors.push(`[markOrdersPaid] ${order.id}: ${check.error}`);
+        continue;
+      }
+    }
+    eligibleIds.push(order.id);
+  }
+
+  if (eligibleIds.length === 0) {
     return { updated: 0, deliveryJobs: 0, errors };
   }
 
@@ -62,7 +79,7 @@ export async function markOrdersPaid(
   const { data: updatedRows, error: updateError } = await (supabase as any)
     .from('orders')
     .update(patch)
-    .in('id', pendingIds)
+    .in('id', eligibleIds)
     .eq('status', 'pending')
     .select('id');
 

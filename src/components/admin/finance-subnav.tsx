@@ -5,6 +5,7 @@ import { financeHref } from '@/lib/finance/month-bounds';
 const LINKS = [
   { href: '/admin/finance', label: '總覽' },
   { href: '/admin/finance/merchants', label: '商家應付' },
+  { href: '/admin/finance/credits', label: '預付餘額' },
   { href: '/admin/finance/couriers', label: '配送員結算' },
   { href: '/admin/finance/reconciliation', label: '月結對帳' },
   { href: '/admin/finance/platform-payout', label: '平台收款' },

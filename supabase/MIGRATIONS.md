@@ -5,7 +5,7 @@
 ## 全新專案
 
 1. 執行 `schema.sql`（基礎表與 RLS）
-2. 依下表從 **v2 到 v49** 依序執行各 `migrate-v*.sql`
+2. 依下表從 **v2 到 v51** 依序執行各 `migrate-v*.sql`
 3. 可選：執行 `seed.sql`（示範分類）
 
 ## 既有專案
@@ -63,6 +63,8 @@
 | v47 | `migrate-v47-merchant-default-pickup.sql` | 商家預設發貨／取件地點 |
 | v48 | `migrate-v48-merchant-pickup-locations.sql` | 商家多取件點管理 |
 | v49 | `migrate-v49-product-pickup-location.sql` | 商品綁定取件點 |
+| v50 | `migrate-v50-merchant-platform-credit.sql` | 商家平台費預付餘額 |
+| v51 | `migrate-v51-platform-categories.sql` | 平台分類預設清單＋排序 |
 
 ## 驗證
 

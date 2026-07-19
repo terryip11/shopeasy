@@ -6,6 +6,7 @@ export type AdminCategoryRow = {
   id: string;
   name: string;
   slug: string;
+  sort_order: number;
   created_at: string;
 };
 
@@ -21,7 +22,8 @@ export async function getAdminCategoriesList(page = 1, limit = 100): Promise<{
 
   const { data, error, count } = await supabase
     .from('categories')
-    .select('id, name, slug, created_at', { count: 'exact' })
+    .select('id, name, slug, sort_order, created_at', { count: 'exact' })
+    .order('sort_order', { ascending: true })
     .order('name', { ascending: true })
     .range(from, to);
 

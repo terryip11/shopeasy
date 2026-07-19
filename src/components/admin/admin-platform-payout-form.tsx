@@ -5,7 +5,7 @@ import { ScanLine } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import type { PlatformPayoutSettings } from '@/lib/finance/platform-payout';
+import type { PlatformPayoutSettings } from '@/lib/finance/platform-payout-types';
 
 type Props = {
   initial: PlatformPayoutSettings;
@@ -13,7 +13,7 @@ type Props = {
 };
 
 export function AdminPlatformPayoutForm({ initial, canEdit }: Props) {
-  const [settings, setSettings] = useState(initial);
+  const [settings, setSettings] = useState<PlatformPayoutSettings>(initial);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -38,7 +38,7 @@ export function AdminPlatformPayoutForm({ initial, canEdit }: Props) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || '儲存失敗');
-      setSettings(data.settings);
+      setSettings(data.settings as PlatformPayoutSettings);
       setMessage('已儲存平台收款設定');
     } catch (err) {
       setError((err as Error).message);
@@ -55,9 +55,9 @@ export function AdminPlatformPayoutForm({ initial, canEdit }: Props) {
           <div className="text-sm text-blue-900 dark:text-blue-100">
             <p className="font-medium">用途說明</p>
             <ul className="mt-2 list-inside list-disc space-y-1 text-blue-800/90 dark:text-blue-200/90">
-              <li>線下訂單款項由商家直接收取；平台服務費於月結時由商家轉帳至此 FPS</li>
-              <li>會計可在「商家應付」頁對照應收平台費，並提供此收款資料給商家</li>
-              <li>開通 Stripe 後，卡款訂單仍由平台代收；此 FPS 主要用於線下模式月結</li>
+              <li>線下訂單款項由商家直接收取；平台服務費改為預付，商家轉帳至此 FPS 後申請儲值</li>
+              <li>會計可在「預付餘額」頁審核儲值申請，並提供此收款資料給商家</li>
+              <li>開通 Stripe 後，卡款訂單仍由平台代收並自動扣平台費；此 FPS 主要用於商家預付儲值</li>
             </ul>
           </div>
         </div>
@@ -69,7 +69,9 @@ export function AdminPlatformPayoutForm({ initial, canEdit }: Props) {
           <Input
             id="platform-fps-holder"
             value={settings.accountHolder}
-            onChange={(e) => setSettings((s) => ({ ...s, accountHolder: e.target.value }))}
+            onChange={(e) =>
+              setSettings((s) => ({ ...s, accountHolder: e.target.value }))
+            }
             placeholder="與銀行／FPS 登記姓名一致"
             className="mt-1"
             disabled={!canEdit}
@@ -91,8 +93,10 @@ export function AdminPlatformPayoutForm({ initial, canEdit }: Props) {
           <Input
             id="platform-payout-instructions"
             value={settings.instructions}
-            onChange={(e) => setSettings((s) => ({ ...s, instructions: e.target.value }))}
-            placeholder="例：請於備註填寫店鋪名稱與結算月份"
+            onChange={(e) =>
+              setSettings((s) => ({ ...s, instructions: e.target.value }))
+            }
+            placeholder="例：請於備註填寫店鋪名稱"
             className="mt-1"
             disabled={!canEdit}
           />

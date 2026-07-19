@@ -8,10 +8,12 @@ import { getMerchantForUser } from '@/lib/auth/server';
 import { createClient } from '@/lib/supabase/server';
 import { defaultJobTypeForBusinessType } from '@/lib/merchant/business-type';
 import { listPickupLocationsForMerchant } from '@/lib/merchant/pickup-locations';
+import { getMerchantPlatformCreditBalance } from '@/lib/finance/platform-credit';
 import { MerchantOrderActions } from '@/components/merchant/merchant-order-actions';
 import { MerchantDeliveryCell } from '@/components/merchant/merchant-delivery-cell';
 import { MerchantDeliveryJobInfo } from '@/components/merchant/merchant-delivery-job-info';
 import { MerchantOrderStatusBadge } from '@/components/merchant/merchant-order-status-badge';
+import { MerchantCreditBanner } from '@/components/merchant/merchant-credit-banner';
 import { OrderRowProvider } from '@/components/merchant/order-row-context';
 import { parseOrderItems } from '@/lib/orders/types';
 import type { MerchantDeliveryJobSummary } from '@/lib/merchant/delivery-job-summary';
@@ -250,6 +252,10 @@ export default async function OrdersPage() {
       getMerchantForUser(),
     ]);
 
+  const creditBalance = merchant
+    ? await getMerchantPlatformCreditBalance(merchant.id)
+    : 0;
+
   const defaultJobType = defaultJobTypeForBusinessType(merchant?.business_type);
   const pickupLocations = merchant
     ? (await listPickupLocationsForMerchant(merchant.id)).map((l) => ({
@@ -303,6 +309,8 @@ export default async function OrdersPage() {
           總計 {totalCount} 筆訂單 · 已付款訂單可建立配送任務
         </p>
       </div>
+
+      {merchant && <MerchantCreditBanner balance={creditBalance} />}
 
       <div className="space-y-3 md:hidden">
         {orders.length > 0 ? (

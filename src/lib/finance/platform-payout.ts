@@ -2,15 +2,18 @@ import 'server-only';
 
 import { createAdminClient } from '@/lib/supabase/admin';
 
-export const PLATFORM_PAYOUT_HOLDER_KEY = 'platform_payout_account_holder';
-export const PLATFORM_PAYOUT_FPS_ID_KEY = 'platform_payout_fps_id';
-export const PLATFORM_PAYOUT_INSTRUCTIONS_KEY = 'platform_payout_instructions';
-
-export type PlatformPayoutSettings = {
-  accountHolder: string;
-  fpsId: string;
-  instructions: string;
-};
+export {
+  PLATFORM_PAYOUT_HOLDER_KEY,
+  PLATFORM_PAYOUT_FPS_ID_KEY,
+  PLATFORM_PAYOUT_INSTRUCTIONS_KEY,
+  type PlatformPayoutSettings,
+} from '@/lib/finance/platform-payout-types';
+import {
+  PLATFORM_PAYOUT_HOLDER_KEY,
+  PLATFORM_PAYOUT_FPS_ID_KEY,
+  PLATFORM_PAYOUT_INSTRUCTIONS_KEY,
+  type PlatformPayoutSettings,
+} from '@/lib/finance/platform-payout-types';
 
 function readString(raw: unknown): string {
   if (typeof raw === 'string') return raw.trim();

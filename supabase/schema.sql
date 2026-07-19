@@ -20,6 +20,7 @@ create table if not exists categories (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   slug text unique not null,
+  sort_order integer not null default 100,
   created_at timestamptz default now()
 );
 
