@@ -7,6 +7,7 @@ import { resolveDropoffCoordinates } from '@/lib/delivery/geo';
 import { generatePickupCode } from '@/lib/delivery/pickup-code';
 import type { Database } from '@/types/database';
 import { notifyCourierApproved, notifyCourierRejected } from '@/lib/push/notify-courier';
+import { assertMerchantCanCreateDelivery } from '@/lib/merchant/payout-compliance';
 
 type DeliveryJob = Database['public']['Tables']['delivery_jobs']['Row'];
 
@@ -38,9 +39,14 @@ export async function createDeliveryJobFromOrder(input: {
     return { error: '訂單不存在', job: null };
   }
 
-  const row = order as { id: string; status: string };
+  const row = order as { id: string; status: string; merchant_id: string };
   if (!['paid', 'shipped'].includes(row.status)) {
     return { error: '僅已付款或已發貨訂單可建立配送任務', job: null };
+  }
+
+  const payoutGate = await assertMerchantCanCreateDelivery(row.merchant_id);
+  if (!payoutGate.ok) {
+    return { error: payoutGate.error, job: null };
   }
 
   let zoneSlug: string | null = null;

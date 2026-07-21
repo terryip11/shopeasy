@@ -4,6 +4,12 @@ import type { UserRole } from '@/lib/auth/permissions';
 import { isAdminRole, canAccessAdminRoute, isPromoter } from '@/lib/auth/permissions';
 import { resolvePostLoginPath } from '@/lib/auth/post-login';
 
+/** 手機買家造訪行銷首頁時改導向購物 feed */
+function isMobileBuyerUserAgent(ua: string | null): boolean {
+  if (!ua) return false;
+  return /Android|webOS|iPhone|iPod|iPad|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(ua);
+}
+
 async function getUserRole(
   supabase: ReturnType<typeof createServerClient>,
   userId: string
@@ -35,6 +41,14 @@ function pathNeedsRoleCheck(pathname: string): boolean {
 }
 
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  if (pathname === '/' && isMobileBuyerUserAgent(request.headers.get('user-agent'))) {
+    const productsUrl = request.nextUrl.clone();
+    productsUrl.pathname = '/products';
+    return NextResponse.redirect(productsUrl);
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -62,8 +76,6 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getSession();
   const user = session?.user ?? null;
 
-  const { pathname } = request.nextUrl;
-
   const needsAuth =
     pathname.startsWith('/dashboard') ||
     pathname.startsWith('/admin') ||
@@ -78,7 +90,8 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/api/merchant') ||
     pathname.startsWith('/api/promoter') ||
     pathname.startsWith('/api/orders') ||
-    pathname.startsWith('/api/courier');
+    pathname.startsWith('/api/courier') ||
+    pathname.startsWith('/api/payout');
 
   if (needsAuth && !user) {
     const loginUrl = request.nextUrl.clone();
@@ -128,6 +141,7 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
+    '/',
     '/admin',
     '/admin/:path*',
     '/dashboard/:path*',
@@ -146,6 +160,7 @@ export const config = {
     '/api/promoter/:path*',
     '/api/orders/:path*',
     '/api/courier/:path*',
+    '/api/payout/:path*',
     '/login',
     '/signup',
   ],

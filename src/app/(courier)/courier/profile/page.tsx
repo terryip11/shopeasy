@@ -7,6 +7,7 @@ import {
 } from '@/lib/courier/server';
 import { createClient } from '@/lib/supabase/server';
 import { CourierMobileShell } from '@/components/courier/courier-mobile-shell';
+import { CourierPayoutForm } from '@/components/courier/courier-payout-form';
 import { JOB_TYPE_LABELS } from '@/lib/auth/capabilities';
 import { COURIER_STATUS_LABELS, VEHICLE_LABELS } from '@/lib/courier/types';
 import { Button } from '@/components/ui/button';
@@ -58,6 +59,8 @@ export default async function CourierProfilePage() {
     customer_rating_count: number;
     reject_reason: string | null;
     is_online: boolean;
+    payout_account_holder?: string | null;
+    payout_fps_id?: string | null;
   };
 
   const jobType: DeliveryJobType =
@@ -121,6 +124,13 @@ export default async function CourierProfilePage() {
             </p>
           )}
         </section>
+
+        {courierRow.status === 'active' && (
+          <CourierPayoutForm
+            initialHolder={courierRow.payout_account_holder?.trim() || ''}
+            initialFpsId={courierRow.payout_fps_id?.trim() || ''}
+          />
+        )}
       </div>
     </CourierMobileShell>
   );

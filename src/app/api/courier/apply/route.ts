@@ -11,6 +11,8 @@ const applySchema = z.object({
   zone_ids: z.array(z.string().uuid()).min(1, '請至少選擇一個配送區域'),
   hkid_image_url: z.string().url('請上傳香港身份證'),
   declaration_accepted: z.literal(true, { message: '請閱讀並同意入駐聲明' }),
+  payout_account_holder: z.string().min(2, '請填寫 FPS 收款人姓名').max(100),
+  payout_fps_id: z.string().min(4, '請填寫轉數快 FPS 識別碼').max(100),
 });
 
 export async function POST(request: NextRequest) {
@@ -62,6 +64,8 @@ export async function POST(request: NextRequest) {
           zone_ids: body.zone_ids,
           hkid_image_url: body.hkid_image_url,
           declaration_accepted_at: now,
+          payout_account_holder: body.payout_account_holder.trim(),
+          payout_fps_id: body.payout_fps_id.trim(),
           status: 'pending',
           is_online: false,
           applied_at: now,

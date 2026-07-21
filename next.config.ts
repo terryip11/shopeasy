@@ -47,6 +47,7 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: '**.r2.cloudflarestorage.com' },
       { protocol: 'https', hostname: '**.r2.dev' },
       { protocol: 'https', hostname: '**.amazonaws.com' },
+      { protocol: 'https', hostname: 'images.unsplash.com' },
     ],
   },
   // Next 16 dev + webpack：避免 @swc/helpers ESM 與 CJS interop 不相容造成白屏

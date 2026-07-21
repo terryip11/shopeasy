@@ -8,10 +8,9 @@ import {
   getPendingCourierCount,
 } from '@/lib/admin/couriers';
 import { getAdminRatingSurchargeRules } from '@/lib/admin/courier-rating-rules';
-import { getCourierPlatformFeeRate, getCourierMinBaseFees } from '@/lib/finance/platform-settings';
+import { getCourierMinBaseFees } from '@/lib/finance/platform-settings';
 import { AdminCourierEditDialog } from '@/components/admin/admin-courier-edit-dialog';
 import { AdminCourierRatingRulesManager } from '@/components/admin/admin-courier-rating-rules-manager';
-import { AdminCourierPlatformFeeForm } from '@/components/admin/admin-courier-platform-fee-form';
 import { AdminCourierMinBaseFeeForm } from '@/components/admin/admin-courier-min-base-fee-form';
 import { COURIER_STATUS_LABELS, VEHICLE_LABELS } from '@/lib/courier/types';
 import { JOB_TYPE_LABELS } from '@/lib/auth/capabilities';
@@ -50,7 +49,7 @@ export default async function AdminCouriersPage() {
   const canManage = hasPermission(role, 'couriers:manage');
   const superAdmin = isSuperAdmin(role);
 
-  const [couriers, zones, pendingCount, ratingRulesResult, platformFeeResult, minBaseFeeResult] =
+  const [couriers, zones, pendingCount, ratingRulesResult, minBaseFeeResult] =
     await Promise.all([
     getAdminCouriersList(),
     getAdminDeliveryZones(),
@@ -61,11 +60,6 @@ export default async function AdminCouriersPage() {
           .catch((error) => ({ rules: [] as Awaited<ReturnType<typeof getAdminRatingSurchargeRules>>, error: (error as Error).message }))
       : Promise.resolve(null),
     superAdmin
-      ? getCourierPlatformFeeRate()
-          .then((rate) => ({ rate, error: '' as string }))
-          .catch((error) => ({ rate: 0.1, error: (error as Error).message }))
-      : Promise.resolve(null),
-    superAdmin
       ? getCourierMinBaseFees()
           .then((fees) => ({ fees, error: '' as string }))
           .catch((error) => ({ fees: { food: 0, parcel: 0 }, error: (error as Error).message }))
@@ -74,9 +68,6 @@ export default async function AdminCouriersPage() {
 
   const ratingRules = ratingRulesResult?.rules ?? [];
   const ratingRulesError = ratingRulesResult?.error ?? '';
-  const platformFeeRate = platformFeeResult?.rate ?? 0.1;
-  const platformFeeError = platformFeeResult?.error ?? '';
-  const platformFeePercent = Math.round(platformFeeRate * 1000) / 10;
   const minBaseFees = minBaseFeeResult?.fees ?? { food: 0, parcel: 0 };
   const minBaseFeeError = minBaseFeeResult?.error ?? '';
 
@@ -152,32 +143,7 @@ export default async function AdminCouriersPage() {
           <AdminCourierMinBaseFeeForm
             initialFood={minBaseFees.food}
             initialParcel={minBaseFees.parcel}
-            platformFeePercent={platformFeePercent}
           />
-        </section>
-      )}
-
-      {superAdmin && (
-        <section
-          id="courier-platform-fee"
-          className="scroll-mt-6 space-y-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
-        >
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">配送員收入平台抽成</h2>
-            <p className="mt-1 text-sm text-gray-500">
-              設定平台從配送員每單總配送費中抽取的比例（目前 {platformFeePercent}%）。僅全權管理員可調整。
-            </p>
-          </div>
-
-          {platformFeeError && (
-            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-              {platformFeeError.includes('platform_settings')
-                ? '請執行 supabase/migrate-v26-courier-platform-fee.sql'
-                : platformFeeError}
-            </div>
-          )}
-
-          <AdminCourierPlatformFeeForm initialRatePercent={platformFeePercent} />
         </section>
       )}
 

@@ -15,6 +15,7 @@ export const DEFAULT_MAX_COMMISSION_RATE = 0.3;
 
 export type AffiliatePlatformSettings = {
   enabled: boolean;
+  /** 訂閱為主：固定為 0，平台不抽分享佣金 */
   platformCutRate: number;
   attributionDays: number;
   minCommissionRate: number;
@@ -53,7 +54,6 @@ export async function getAffiliatePlatformSettings(): Promise<AffiliatePlatformS
   const supabase = createAdminClient();
   const keys = [
     AFFILIATE_ENABLED_KEY,
-    AFFILIATE_PLATFORM_CUT_KEY,
     AFFILIATE_ATTRIBUTION_DAYS_KEY,
     AFFILIATE_MIN_COMMISSION_KEY,
     AFFILIATE_MAX_COMMISSION_KEY,
@@ -70,10 +70,19 @@ export async function getAffiliatePlatformSettings(): Promise<AffiliatePlatformS
 
   return {
     enabled: parseBool(map.get(AFFILIATE_ENABLED_KEY), true),
-    platformCutRate: parseRate(map.get(AFFILIATE_PLATFORM_CUT_KEY), DEFAULT_AFFILIATE_PLATFORM_CUT),
-    attributionDays: parseDays(map.get(AFFILIATE_ATTRIBUTION_DAYS_KEY), DEFAULT_AFFILIATE_ATTRIBUTION_DAYS),
-    minCommissionRate: parseRate(map.get(AFFILIATE_MIN_COMMISSION_KEY), DEFAULT_MIN_COMMISSION_RATE),
-    maxCommissionRate: parseRate(map.get(AFFILIATE_MAX_COMMISSION_KEY), DEFAULT_MAX_COMMISSION_RATE),
+    platformCutRate: 0,
+    attributionDays: parseDays(
+      map.get(AFFILIATE_ATTRIBUTION_DAYS_KEY),
+      DEFAULT_AFFILIATE_ATTRIBUTION_DAYS
+    ),
+    minCommissionRate: parseRate(
+      map.get(AFFILIATE_MIN_COMMISSION_KEY),
+      DEFAULT_MIN_COMMISSION_RATE
+    ),
+    maxCommissionRate: parseRate(
+      map.get(AFFILIATE_MAX_COMMISSION_KEY),
+      DEFAULT_MAX_COMMISSION_RATE
+    ),
   };
 }
 
@@ -82,9 +91,10 @@ export async function setAffiliatePlatformSettings(
   adminId: string
 ): Promise<{ error: string | null; settings: AffiliatePlatformSettings }> {
   const current = await getAffiliatePlatformSettings();
+
   const next: AffiliatePlatformSettings = {
     enabled: input.enabled ?? current.enabled,
-    platformCutRate: input.platformCutRate ?? current.platformCutRate,
+    platformCutRate: 0,
     attributionDays: input.attributionDays ?? current.attributionDays,
     minCommissionRate: input.minCommissionRate ?? current.minCommissionRate,
     maxCommissionRate: input.maxCommissionRate ?? current.maxCommissionRate,
@@ -95,9 +105,8 @@ export async function setAffiliatePlatformSettings(
   }
 
   const supabase = createAdminClient();
-  const rows = [
+  const rows: { key: string; value: unknown }[] = [
     { key: AFFILIATE_ENABLED_KEY, value: next.enabled },
-    { key: AFFILIATE_PLATFORM_CUT_KEY, value: next.platformCutRate },
     { key: AFFILIATE_ATTRIBUTION_DAYS_KEY, value: next.attributionDays },
     { key: AFFILIATE_MIN_COMMISSION_KEY, value: next.minCommissionRate },
     { key: AFFILIATE_MAX_COMMISSION_KEY, value: next.maxCommissionRate },

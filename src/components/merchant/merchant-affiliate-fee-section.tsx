@@ -60,6 +60,8 @@ export function MerchantAffiliateFeeSection({
     includeStripe,
   ]);
 
+  const showPlatformServiceFee = platformFeeRate > 0;
+  const showPlatformCut = platform.platformCutRate > 0;
   const platformFeePercent = Math.round(platformFeeRate * 1000) / 10;
   const platformCutPercent = Math.round(platform.platformCutRate * 100);
 
@@ -71,20 +73,35 @@ export function MerchantAffiliateFeeSection({
           <h2 className="font-semibold text-gray-900 dark:text-white">費用說明</h2>
           <ul className="mt-2 space-y-1.5 text-sm text-gray-600 dark:text-gray-300">
             <li>
-              <strong>分享佣金</strong>：只依「被分享商品」在訂單內的金額計算，同單其他商品不計入佣金基數。
+              <strong>分享佣金</strong>
+              ：只依「被分享商品」在訂單內的金額計算，同單其他商品不計入佣金基數。由您以
+              FPS 直付分享員。
             </li>
+            {showPlatformServiceFee && (
+              <li>
+                <strong>平台服務費</strong>：依整筆訂單 GMV（商品小計 + 運費）×{' '}
+                {platformFeePercent}% 收取，與是否分享無關。
+              </li>
+            )}
             <li>
-              <strong>平台服務費</strong>：依整筆訂單 GMV（商品小計 + 運費）× {platformFeePercent}%
-              收取，與是否分享無關。
+              <strong>運費(向客戶收取的運費)</strong>
+              ：不計入分享佣金
+              {showPlatformServiceFee ? '，但會計入 GMV 與平台服務費' : ''}。
             </li>
-            <li>
-              <strong>運費(向客戶收取的運費)</strong>：不計入分享佣金，但會計入 GMV 與平台服務費。
-            </li>
-            <li>
-              分享員實得 = 佣金總額 × (1 − 平台抽成 {platformCutPercent}%)；佣金總額由商家負擔。
-            </li>
+            {showPlatformCut ? (
+              <li>
+                分享員實得 = 佣金總額 × (1 − 平台抽成 {platformCutPercent}
+                %)；佣金總額由商家負擔。
+              </li>
+            ) : (
+              <li>分享員實得 = 佣金總額（平台不抽分享佣金）；佣金由商家負擔並直付。</li>
+            )}
             <li className="text-gray-500">
-              試算不含基礎設施分攤；若使用 Stripe 線上收款，另扣估算卡費（2.9% + HK$2.35）。
+              試算不含基礎設施分攤
+              {stripePaymentsEnabled
+                ? '；若使用 Stripe 線上收款，另扣估算卡費（2.9% + HK$2.35）'
+                : ''}
+              。
             </li>
           </ul>
         </div>
@@ -181,10 +198,14 @@ export function MerchantAffiliateFeeSection({
             <dt className="text-gray-500">分享員實得</dt>
             <dd>{formatHkd(estimate.promoterNet)}</dd>
           </div>
-          <div className="flex justify-between rounded-lg bg-gray-50 px-3 py-2 dark:bg-gray-800/60">
-            <dt className="text-gray-500">平台服務費</dt>
-            <dd className="text-red-600 dark:text-red-400">−{formatHkd(estimate.platformServiceFee)}</dd>
-          </div>
+          {showPlatformServiceFee && (
+            <div className="flex justify-between rounded-lg bg-gray-50 px-3 py-2 dark:bg-gray-800/60">
+              <dt className="text-gray-500">平台服務費</dt>
+              <dd className="text-red-600 dark:text-red-400">
+                −{formatHkd(estimate.platformServiceFee)}
+              </dd>
+            </div>
+          )}
           {includeStripe && (
             <div className="flex justify-between rounded-lg bg-gray-50 px-3 py-2 dark:bg-gray-800/60">
               <dt className="text-gray-500">Stripe 卡費（估算）</dt>

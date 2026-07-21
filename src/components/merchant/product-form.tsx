@@ -434,15 +434,19 @@ export function ProductForm({
             <dd className="text-right text-red-600 dark:text-red-400">
               −HK${shippingPreview.estimate.stripeFee.toFixed(2)}
             </dd>
-            <dt>
-              平台服務費
-              <span className="block font-normal text-gray-400">
-                {(shippingContext.platformFeeRate * 100).toFixed(1)}%（依訂閱等級）
-              </span>
-            </dt>
-            <dd className="text-right text-red-600 dark:text-red-400">
-              −HK${shippingPreview.estimate.platformFee.toFixed(2)}
-            </dd>
+            {shippingContext.platformFeeRate > 0 && (
+              <>
+                <dt>
+                  平台服務費
+                  <span className="block font-normal text-gray-400">
+                    {(shippingContext.platformFeeRate * 100).toFixed(1)}%（依訂閱等級）
+                  </span>
+                </dt>
+                <dd className="text-right text-red-600 dark:text-red-400">
+                  −HK${shippingPreview.estimate.platformFee.toFixed(2)}
+                </dd>
+              </>
+            )}
             <dt>配送員工資（實際）</dt>
             <dd className="text-right text-red-600 dark:text-red-400">
               −HK${shippingPreview.effectiveCourier.toFixed(2)}
@@ -462,7 +466,9 @@ export function ProductForm({
             </dd>
           </dl>
           <p className="mt-2 text-xs text-gray-400">
-            試算僅供參考；線下付款無 Stripe 手續費。未含包裝等其他成本。
+            {shippingContext.platformFeeRate > 0
+              ? '試算僅供參考；線下付款無 Stripe 手續費。未含包裝等其他成本。'
+              : '試算僅供參考（訂閱為主，不抽訂單服務費）；線下付款無 Stripe 手續費。未含包裝等其他成本。'}
           </p>
         </div>
 

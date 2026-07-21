@@ -6,7 +6,7 @@ import { canManageFinance } from '@/lib/auth/permissions';
 import { getFinanceReconciliationView } from '@/lib/finance/reconciliation';
 import { FinanceSubnav } from '@/components/admin/finance-subnav';
 import { FinanceMonthPickerBar } from '@/components/admin/finance-month-picker-bar';
-import { parseMonthParam, financeHref } from '@/lib/finance/month-bounds';
+import { parseMonthParam } from '@/lib/finance/month-bounds';
 import { FinanceMonthlyCostsForm } from '@/components/admin/finance-monthly-costs-form';
 
 export const dynamic = 'force-dynamic';
@@ -29,11 +29,14 @@ export default async function FinanceReconciliationPage({
       <div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">月結對帳</h1>
         <p className="mt-1 text-sm text-gray-500">
-          {view.monthLabel}平台收入、成本與應付款項一覽
+          {view.monthLabel}訂閱收入、成本與營運結餘一覽
         </p>
       </div>
 
-      <FinanceSubnav active="/admin/finance/reconciliation" monthParam={bounds.monthParam} />
+      <FinanceSubnav
+        active="/admin/finance/reconciliation"
+        monthParam={bounds.monthParam}
+      />
       <FinanceMonthPickerBar monthParam={bounds.monthParam} />
 
       <div className="rounded-xl border border-indigo-200 bg-indigo-50/50 p-6 dark:border-indigo-900 dark:bg-indigo-950/20">
@@ -48,14 +51,12 @@ export default async function FinanceReconciliationPage({
           HK${view.operatingSurplus.toFixed(2)}
         </p>
         <p className="mt-2 text-xs text-gray-500">
-          不含應付商家／配送員（屬負債）；固定成本請於下方填寫實際帳單金額。
+          收入以訂閱月費為主。固定成本請於下方填寫實際帳單金額。
         </p>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Section title="平台收入">
-          <Line label="商家服務費（GMV）" amount={view.revenue.merchantServiceFee} positive />
-          <Line label="配送平台抽成" amount={view.revenue.courierPlatformFee} positive />
           <Line label="訂閱月費" amount={view.revenue.subscriptionRevenue} positive />
           <Line label="收入合計" amount={view.revenue.total} positive bold />
         </Section>
@@ -70,18 +71,16 @@ export default async function FinanceReconciliationPage({
           <Line label="成本合計" amount={view.costs.total} bold />
         </Section>
 
-        <Section title="應付款項（負債）">
-          <Line
-            label="應付商家"
-            amount={view.liabilities.merchantPayable}
-            href={financeHref('/admin/finance/merchants', bounds.monthParam)}
-          />
-          <Line
-            label="待發配送員工資"
-            amount={view.liabilities.courierPendingPayroll}
-            href={financeHref('/admin/finance/couriers', bounds.monthParam)}
-          />
-          <Line label="應付合計" amount={view.liabilities.total} bold />
+        <Section title="合規跟進">
+          <Link
+            href="/admin/finance/payout-overdue"
+            className="block rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-950 hover:bg-amber-100 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100"
+          >
+            前往逾期未付跟進 →
+          </Link>
+          <p className="pt-1 text-xs text-gray-500">
+            分享員／配送員工資由商家直付，平台不列為應付負債。
+          </p>
         </Section>
 
         <div className="rounded-xl bg-white p-6 shadow dark:bg-gray-900">
@@ -124,38 +123,28 @@ function Line({
   amount,
   positive,
   bold,
-  href,
 }: {
   label: string;
   amount: number;
   positive?: boolean;
   bold?: boolean;
-  href?: string;
 }) {
-  const value = (
-    <span
-      className={
-        bold
-          ? 'font-bold text-gray-900 dark:text-white'
-          : positive
-            ? 'text-green-700 dark:text-green-400'
-            : 'text-gray-700 dark:text-gray-300'
-      }
-    >
-      {positive ? '+' : ''}HK${amount.toFixed(2)}
-    </span>
-  );
-
   return (
-    <div className={`flex items-center justify-between text-sm ${bold ? 'border-t pt-2 mt-2' : ''}`}>
-      {href ? (
-        <Link href={href} className="text-orange-600 hover:underline">
-          {label}
-        </Link>
-      ) : (
-        <span className="text-gray-600 dark:text-gray-400">{label}</span>
-      )}
-      {value}
+    <div
+      className={`flex items-center justify-between text-sm ${bold ? 'mt-2 border-t pt-2' : ''}`}
+    >
+      <span className="text-gray-600 dark:text-gray-400">{label}</span>
+      <span
+        className={
+          bold
+            ? 'font-bold text-gray-900 dark:text-white'
+            : positive
+              ? 'text-green-700 dark:text-green-400'
+              : 'text-gray-700 dark:text-gray-300'
+        }
+      >
+        {positive ? '+' : ''}HK${amount.toFixed(2)}
+      </span>
     </div>
   );
 }

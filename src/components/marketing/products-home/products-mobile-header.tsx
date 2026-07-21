@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Search, ShoppingCart } from 'lucide-react';
+import { Search, ShoppingCart, Info } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { getCartItemCount } from '@/lib/cart';
 
@@ -46,7 +46,7 @@ export function ProductsMobileHeader({ initialQuery = '' }: Props) {
   return (
     <header className="sticky top-0 z-50 border-b border-gray-100 bg-white/95 backdrop-blur-md dark:border-gray-800 dark:bg-gray-950/95">
       <div className="mx-auto flex max-w-lg items-center gap-2 px-3 py-2.5 md:max-w-7xl md:gap-4 md:px-6 md:py-3">
-        <Link href="/" className="flex shrink-0 items-center gap-1.5 md:gap-2">
+        <Link href="/products" className="flex shrink-0 items-center gap-1.5 md:gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500 text-sm font-bold text-white">
             S
           </div>
@@ -68,6 +68,14 @@ export function ProductsMobileHeader({ initialQuery = '' }: Props) {
             />
           </div>
         </form>
+
+        <Link
+          href="/about"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-gray-700 active:bg-gray-100 dark:text-gray-200 dark:active:bg-gray-800"
+          aria-label="關於 ShopEasy"
+        >
+          <Info className="h-5 w-5" />
+        </Link>
 
         <Link
           href="/cart"

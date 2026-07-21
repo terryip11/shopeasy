@@ -632,6 +632,8 @@ export interface Database {
           declaration_accepted_at: string | null;
           customer_rating_avg: number | null;
           customer_rating_count: number;
+          payout_account_holder: string | null;
+          payout_fps_id: string | null;
           created_at: string;
         };
         Insert: {
@@ -646,6 +648,8 @@ export interface Database {
           declaration_accepted_at?: string | null;
           customer_rating_avg?: number | null;
           customer_rating_count?: number;
+          payout_account_holder?: string | null;
+          payout_fps_id?: string | null;
         };
         Update: {
           phone?: string | null;
@@ -661,6 +665,8 @@ export interface Database {
           declaration_accepted_at?: string | null;
           customer_rating_avg?: number | null;
           customer_rating_count?: number;
+          payout_account_holder?: string | null;
+          payout_fps_id?: string | null;
         };
       };
       delivery_jobs: {

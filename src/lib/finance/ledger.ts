@@ -2,7 +2,8 @@ import 'server-only';
 
 import { createAdminClient } from '@/lib/supabase/admin';
 import { allocateInfraCostForOrder } from '@/lib/finance/infra-allocation';
-import { getPlatformFeeRate, roundMoney } from '@/lib/finance/config';
+import { roundMoney } from '@/lib/finance/config';
+import { getEffectivePlatformFeeRate } from '@/lib/finance/monetization';
 import { resolveStripeFeeHkd } from '@/lib/finance/stripe-fee';
 import { recordAffiliateCommission, reverseAffiliateCommission } from '@/lib/affiliate/commission';
 import {
@@ -74,7 +75,7 @@ export async function recordOrderLedger(
     ? await resolveStripeFeeHkd(paymentId ?? row.stripe_payment_id, gmv)
     : 0;
 
-  const platformFeeRate = getPlatformFeeRate(
+  const platformFeeRate = await getEffectivePlatformFeeRate(
     (merchantRow as { tier?: string | null } | null)?.tier
   );
   const platformFeeAmount = roundMoney(gmv * platformFeeRate);

@@ -3,6 +3,7 @@ import 'server-only';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import { getPlatformFeeRate, roundMoney } from '@/lib/finance/config';
+import { getEffectivePlatformFeeRate } from '@/lib/finance/monetization';
 import { isManualPaymentMethod } from '@/lib/checkout/payment-options';
 import type { MerchantPaymentMethod } from '@/lib/merchant/payment-methods';
 import type { MerchantTier } from '@/types/database';
@@ -85,10 +86,10 @@ export async function estimateOfflinePlatformFeeForOrder(orderId: string): Promi
     .eq('id', row.merchant_id)
     .maybeSingle();
 
-  const fee = estimatePlatformFeeAmount(
-    gmv,
+  const rate = await getEffectivePlatformFeeRate(
     (merchant as { tier?: string } | null)?.tier
   );
+  const fee = roundMoney(gmv * rate);
 
   return { fee, paymentMethod: method, isOffline: true, merchantId: row.merchant_id, gmv };
 }

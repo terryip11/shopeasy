@@ -34,8 +34,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ShopEasy - 您的優質購物平台",
-  description: "探索精選好物，發現優質商家，享受便捷購物體驗",
+  title: "ShopEasy - 本地購物與配送平台",
+  description: "連接買家、商家與配送夥伴，讓香港街坊的日常購物更簡單、更可靠",
   applicationName: "ShopEasy",
   appleWebApp: {
     capable: true,

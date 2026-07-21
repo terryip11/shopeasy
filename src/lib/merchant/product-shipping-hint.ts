@@ -60,7 +60,9 @@ export function buildProductShippingContext(
     courier_fee_parcel?: number | null;
     tier?: string | null;
   } | null,
-  minFees: { food: number; parcel: number }
+  minFees: { food: number; parcel: number },
+  /** 訂閱為主模式下應傳 0 */
+  platformFeeRateOverride?: number
 ): ProductShippingContext {
   return {
     businessType: normalizeBusinessType(merchant?.business_type),
@@ -72,6 +74,9 @@ export function buildProductShippingContext(
     ),
     minCourierBaseFood: minFees.food,
     minCourierBaseParcel: minFees.parcel,
-    platformFeeRate: getPlatformFeeRate(merchant?.tier),
+    platformFeeRate:
+      platformFeeRateOverride !== undefined
+        ? platformFeeRateOverride
+        : getPlatformFeeRate(merchant?.tier),
   };
 }

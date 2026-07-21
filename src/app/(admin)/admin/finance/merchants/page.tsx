@@ -34,20 +34,23 @@ export default async function FinanceMerchantsPage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">商家應付彙總</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">商家訂單分錄彙總</h1>
         <p className="mt-1 text-sm text-gray-500">
-          {view.monthLabel}各商家訂單分錄彙總 · 應付商家 = GMV − Stripe − 服務費 − 基礎設施分攤
+          {view.monthLabel}各商家訂單分錄參考 · 貨款直付商家，平台不代付
         </p>
       </div>
 
       <FinanceSubnav active="/admin/finance/merchants" monthParam={bounds.monthParam} />
       <FinanceMonthPickerBar monthParam={bounds.monthParam} />
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <Stat label="訂單數" value={String(view.totals.order_count)} />
         <Stat label="GMV 合計" value={`HK$${view.totals.gmv.toFixed(2)}`} />
-        <Stat label="平台服務費" value={`HK$${view.totals.platform_fee.toFixed(2)}`} accent />
-        <Stat label="應付商家合計" value={`HK$${view.totals.merchant_net.toFixed(2)}`} highlight />
+        <Stat
+          label="分錄淨額合計"
+          value={`HK$${view.totals.merchant_net.toFixed(2)}`}
+          highlight
+        />
       </div>
 
       <div className="rounded-xl bg-white shadow dark:bg-gray-900 overflow-x-auto">
@@ -59,9 +62,8 @@ export default async function FinanceMerchantsPage({
               <TableHead className="text-right">訂單</TableHead>
               <TableHead className="text-right">GMV</TableHead>
               <TableHead className="text-right">Stripe</TableHead>
-              <TableHead className="text-right">服務費</TableHead>
               <TableHead className="text-right">配送成本</TableHead>
-              <TableHead className="text-right">應付商家</TableHead>
+              <TableHead className="text-right">分錄淨額</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -75,7 +77,6 @@ export default async function FinanceMerchantsPage({
                   <TableCell className="text-right">{row.order_count}</TableCell>
                   <TableCell className="text-right">HK${row.gmv.toFixed(2)}</TableCell>
                   <TableCell className="text-right">HK${row.stripe_fee.toFixed(2)}</TableCell>
-                  <TableCell className="text-right">HK${row.platform_fee.toFixed(2)}</TableCell>
                   <TableCell className="text-right text-gray-500">
                     HK${row.delivery_cost.toFixed(2)}
                   </TableCell>
@@ -86,7 +87,7 @@ export default async function FinanceMerchantsPage({
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={8} className="h-24 text-center text-gray-500">
+                <TableCell colSpan={7} className="h-24 text-center text-gray-500">
                   本月尚無訂單分錄
                 </TableCell>
               </TableRow>
@@ -96,7 +97,7 @@ export default async function FinanceMerchantsPage({
       </div>
 
       <p className="text-xs text-gray-500">
-        配送成本為商家每單配送費參考，已記入分錄但不從商家應得扣款。明細請至
+        配送成本為商家每單配送費參考。明細請至
         <Link
           href={financeHref('/admin/finance', bounds.monthParam)}
           className="mx-1 text-orange-600 hover:underline"
@@ -112,12 +113,10 @@ export default async function FinanceMerchantsPage({
 function Stat({
   label,
   value,
-  accent,
   highlight,
 }: {
   label: string;
   value: string;
-  accent?: boolean;
   highlight?: boolean;
 }) {
   return (
@@ -127,9 +126,7 @@ function Stat({
         className={`mt-1 text-lg font-bold ${
           highlight
             ? 'text-violet-700 dark:text-violet-400'
-            : accent
-              ? 'text-green-700 dark:text-green-400'
-              : 'text-gray-900 dark:text-white'
+            : 'text-gray-900 dark:text-white'
         }`}
       >
         {value}

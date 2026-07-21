@@ -123,6 +123,9 @@ export async function setCourierMinBaseFees(
 }
 
 export async function getCourierPlatformFeeRate(): Promise<number> {
+  const { isSubscriptionOnlyMode } = await import('@/lib/finance/monetization');
+  if (await isSubscriptionOnlyMode()) return 0;
+
   const supabase = createAdminClient();
   const { data } = await (supabase as any)
     .from('platform_settings')

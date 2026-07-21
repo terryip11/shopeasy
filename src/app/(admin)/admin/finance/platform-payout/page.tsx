@@ -18,7 +18,7 @@ export default async function AdminPlatformPayoutPage() {
       <div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">平台收款設定</h1>
         <p className="mt-1 text-sm text-gray-500">
-          設定 ShopEasy 平台轉數快（FPS）收款資料，供商家預付／儲值平台服務費時轉帳
+          平台公司 FPS 收款資料（訂閱與公司收款用途；不向商家強制預存服務費）
         </p>
       </div>
 

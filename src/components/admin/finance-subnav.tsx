@@ -2,18 +2,25 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { financeHref } from '@/lib/finance/month-bounds';
 
-const LINKS = [
+type FinanceHref =
+  | '/admin/finance'
+  | '/admin/revenue'
+  | '/admin/finance/merchants'
+  | '/admin/finance/payout-overdue'
+  | '/admin/finance/reconciliation'
+  | '/admin/finance/platform-payout';
+
+const LINKS: { href: FinanceHref; label: string }[] = [
   { href: '/admin/finance', label: '總覽' },
-  { href: '/admin/finance/merchants', label: '商家應付' },
-  { href: '/admin/finance/credits', label: '預付餘額' },
-  { href: '/admin/finance/couriers', label: '配送員結算' },
+  { href: '/admin/revenue', label: '訂閱收入' },
+  { href: '/admin/finance/merchants', label: '訂單分錄' },
+  { href: '/admin/finance/payout-overdue', label: '逾期未付' },
   { href: '/admin/finance/reconciliation', label: '月結對帳' },
   { href: '/admin/finance/platform-payout', label: '平台收款' },
-  { href: '/admin/revenue', label: '訂閱收入' },
-] as const;
+];
 
 type Props = {
-  active: (typeof LINKS)[number]['href'];
+  active: FinanceHref;
   monthParam?: string;
 };
 

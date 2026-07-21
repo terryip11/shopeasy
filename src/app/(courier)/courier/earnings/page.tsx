@@ -3,7 +3,6 @@ import { redirect } from 'next/navigation';
 import { getAuthUser } from '@/lib/auth/server';
 import { getCourierProfile } from '@/lib/courier/server';
 import { getCourierEarningsView } from '@/lib/finance/courier-earnings-view';
-import { getCourierPlatformFeeRate } from '@/lib/finance/platform-settings';
 import { CourierMobileShell } from '@/components/courier/courier-mobile-shell';
 import { CourierEarningsList } from '@/components/courier/courier-earnings-list';
 import { Button } from '@/components/ui/button';
@@ -32,15 +31,9 @@ export default async function CourierEarningsPage() {
 
   let view: Awaited<ReturnType<typeof getCourierEarningsView>> | null = null;
   let loadError = '';
-  let platformFeePercent = 10;
 
   try {
-    const [earningsView, feeRate] = await Promise.all([
-      getCourierEarningsView(user.id),
-      getCourierPlatformFeeRate(),
-    ]);
-    view = earningsView;
-    platformFeePercent = Math.round(feeRate * 1000) / 10;
+    view = await getCourierEarningsView(user.id);
   } catch (error) {
     loadError = (error as Error).message;
   }
@@ -50,8 +43,8 @@ export default async function CourierEarningsPage() {
   return (
     <CourierMobileShell activeTab="earnings" title="我的收入">
       <div className="space-y-6">
-        <p className="text-xs text-gray-500 leading-relaxed">
-          顯示金額為扣除平台服務費（目前 {platformFeePercent}%）後的實收。接單時會鎖定該單抽成比例；已結算紀錄不會因事後調整而改變。送達後記入待結算，每月由平台統一結算。
+        <p className="text-xs leading-relaxed text-gray-500">
+          顯示金額為配送實收。工資由商家以 FPS 直接支付；完成後商家會標記已付。若逾期未付可回報平台（平台不代墊）。
         </p>
 
         {loadError && (

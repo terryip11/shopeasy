@@ -9,6 +9,7 @@ import { normalizeBusinessType } from '@/lib/merchant/business-type';
 import type { ProductKind } from '@/lib/merchant/product-kinds';
 import { MERCHANT_TIER_LIMITS, type MerchantTier } from '@/lib/merchant/tier-config';
 import { getCourierMinBaseFees } from '@/lib/finance/platform-settings';
+import { getEffectivePlatformFeeRate } from '@/lib/finance/monetization';
 import { buildProductShippingContext } from '@/lib/merchant/product-shipping-hint';
 import { listPickupLocationsForMerchant } from '@/lib/merchant/pickup-locations';
 import { ProductForm } from '@/components/merchant/product-form';
@@ -21,14 +22,16 @@ type PageProps = { params: Promise<{ id: string }> };
 export default async function EditProductPage({ params }: PageProps) {
   const { id } = await params;
   const merchant = await getActiveMerchantForUser();
-  const [product, categories, minFees, extras, menuCategories, pickupLocations] = await Promise.all([
-    getMerchantProduct(id),
-    getCategories(100),
-    getCourierMinBaseFees().catch(() => ({ food: 0, parcel: 0 })),
-    loadProductFormExtras(id).catch(() => ({ variants: [], option_groups: [] })),
-    merchant ? listMenuCategories(merchant.id).catch(() => []) : Promise.resolve([]),
-    merchant ? listPickupLocationsForMerchant(merchant.id).catch(() => []) : Promise.resolve([]),
-  ]);
+  const [product, categories, minFees, extras, menuCategories, pickupLocations, platformFeeRate] =
+    await Promise.all([
+      getMerchantProduct(id),
+      getCategories(100),
+      getCourierMinBaseFees().catch(() => ({ food: 0, parcel: 0 })),
+      loadProductFormExtras(id).catch(() => ({ variants: [], option_groups: [] })),
+      merchant ? listMenuCategories(merchant.id).catch(() => []) : Promise.resolve([]),
+      merchant ? listPickupLocationsForMerchant(merchant.id).catch(() => []) : Promise.resolve([]),
+      getEffectivePlatformFeeRate(merchant?.tier),
+    ]);
   const tier = ((merchant?.tier as MerchantTier) || 'basic');
   const maxImages = MERCHANT_TIER_LIMITS[tier].maxImagesPerProduct;
   const businessType = normalizeBusinessType(merchant?.business_type);
@@ -52,7 +55,7 @@ export default async function EditProductPage({ params }: PageProps) {
         categories={categories}
         mode="edit"
         maxImages={maxImages}
-        shippingContext={buildProductShippingContext(merchant, minFees)}
+        shippingContext={buildProductShippingContext(merchant, minFees, platformFeeRate)}
         businessType={businessType}
         menuCategories={menuCategories}
         pickupLocations={pickupLocations.map((l) => ({

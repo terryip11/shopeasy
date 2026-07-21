@@ -18,7 +18,7 @@ export function Footer() {
               <span className="text-xl font-bold text-gray-900 dark:text-white">ShopEasy</span>
             </Link>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              您的優質購物平台，匯聚精選好物與優質商家，讓購物更簡單、更愉悅。
+              香港本地購物與配送平台——連接買家、商家與配送夥伴，讓街坊日常消費更簡單。
             </p>
             <div className="flex items-center gap-4">
               <a
@@ -57,18 +57,18 @@ export function Footer() {
             </h3>
             <ul className="mt-4 space-y-3">
               <li>
-                <Link href="/" className="text-sm text-gray-600 hover:text-orange-500 dark:text-gray-400 dark:hover:text-orange-400">
-                  首頁
+                <Link href="/about" className="text-sm text-gray-600 hover:text-orange-500 dark:text-gray-400 dark:hover:text-orange-400">
+                  關於平台
                 </Link>
               </li>
               <li>
-                <Link href="#categories" className="text-sm text-gray-600 hover:text-orange-500 dark:text-gray-400 dark:hover:text-orange-400">
+                <Link href="/products" className="text-sm text-gray-600 hover:text-orange-500 dark:text-gray-400 dark:hover:text-orange-400">
+                  開始購物
+                </Link>
+              </li>
+              <li>
+                <Link href="/categories" className="text-sm text-gray-600 hover:text-orange-500 dark:text-gray-400 dark:hover:text-orange-400">
                   商品分類
-                </Link>
-              </li>
-              <li>
-                <Link href="#products" className="text-sm text-gray-600 hover:text-orange-500 dark:text-gray-400 dark:hover:text-orange-400">
-                  熱銷商品
                 </Link>
               </li>
               <li>
@@ -131,7 +131,7 @@ export function Footer() {
         <div className="mt-12 border-t border-gray-200 pt-8 dark:border-gray-800">
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              © 2024 ShopEasy. 保留所有權利。
+              © {new Date().getFullYear()} ShopEasy. 保留所有權利。
             </p>
             <div className="flex items-center gap-6">
               <Link href="#" className="text-sm text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">

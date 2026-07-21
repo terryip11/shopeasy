@@ -35,7 +35,7 @@ export default async function AdminRevenuePage({
       <div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">訂閱收入</h1>
         <p className="mt-1 text-sm text-gray-500">
-          商家等級月費收入（{formatTierPriceSummary(tierPrices)}）
+          商家等級月費收入（{formatTierPriceSummary(tierPrices)}）· 平台主要收入來源
         </p>
       </div>
 

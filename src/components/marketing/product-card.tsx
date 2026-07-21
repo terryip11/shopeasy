@@ -36,7 +36,7 @@ export function ProductCard({
           alt={name}
           fill
           className="object-cover transition-transform duration-500 group-hover:scale-110"
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+          sizes="(max-width: 768px) 50vw, (max-width: 1200px) 50vw, 25vw"
         />
         
         {/* Overlay Actions */}
@@ -78,21 +78,21 @@ export function ProductCard({
         </div>
 
         {description && (
-          <p className="mt-1.5 text-xs text-gray-500 line-clamp-2 dark:text-gray-400">
+          <p className="mt-1.5 hidden text-xs text-gray-500 line-clamp-2 sm:block dark:text-gray-400">
             {description}
           </p>
         )}
 
-        <div className="mt-3 flex items-center justify-between">
+        <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-baseline gap-1">
-            <span className="text-lg font-bold text-orange-500">
+            <span className="text-base font-bold text-orange-500 sm:text-lg">
               ${price.toFixed(2)}
             </span>
           </div>
 
           <Link
             href={`/products/${id}`}
-            className="card-action-btn bg-gray-900 text-white hover:bg-orange-500 dark:bg-white dark:text-gray-900 dark:hover:bg-orange-500 dark:hover:text-white"
+            className="card-action-btn w-full justify-center bg-gray-900 text-white hover:bg-orange-500 sm:w-auto dark:bg-white dark:text-gray-900 dark:hover:bg-orange-500 dark:hover:text-white"
           >
             <ShoppingCart className="h-3.5 w-3.5" />
             購買

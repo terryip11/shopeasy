@@ -6,6 +6,7 @@ import { Copy, Check, Link2, Loader2, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { normalizeR2ImageUrl } from '@/lib/storage/r2-public-url';
 import { shareOrCopyUrl } from '@/lib/share/client';
+import { ReportUnpaidButton } from '@/components/shared/report-unpaid-button';
 type ShareableProduct = {
   id: string;
   name: string;
@@ -30,10 +31,24 @@ type EarningsSummary = {
   paid: number;
 };
 
+type EarningRow = {
+  id: string;
+  netAmount: number;
+  status: string;
+  createdAt: string;
+  merchantPaidAt: string | null;
+  overdueDays: number;
+  canReportUnpaid: boolean;
+  merchantName: string;
+  orderId: string | null;
+};
+
 export function PromoterDashboard() {
   const [products, setProducts] = useState<ShareableProduct[]>([]);
   const [links, setLinks] = useState<ShareLink[]>([]);
   const [summary, setSummary] = useState<EarningsSummary | null>(null);
+  const [earnings, setEarnings] = useState<EarningRow[]>([]);
+  const [merchantDirect, setMerchantDirect] = useState(false);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
@@ -60,6 +75,8 @@ export function PromoterDashboard() {
       setProducts(productsData.products || []);
       setLinks(linksData.links || []);
       setSummary(earningsData.summary || null);
+      setEarnings(earningsData.earnings || []);
+      setMerchantDirect(Boolean(earningsData.merchantDirect));
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -129,6 +146,45 @@ export function PromoterDashboard() {
           <StatCard label="待結算" value={summary.pending} />
           <StatCard label="已確認" value={summary.confirmed} />
           <StatCard label="已付款" value={summary.paid} />
+        </section>
+      )}
+
+      {earnings.length > 0 && (
+        <section>
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white">佣金明細</h2>
+          {merchantDirect && (
+            <p className="mt-1 text-sm text-gray-500">
+              佣金由商家以 FPS 直接支付。若逾期未付，可向平台回報（平台不代墊）。
+            </p>
+          )}
+          <ul className="mt-3 divide-y divide-gray-100 overflow-hidden rounded-2xl border border-gray-200 bg-white dark:divide-gray-800 dark:border-gray-800 dark:bg-gray-900">
+            {earnings.map((row) => (
+              <li key={row.id} className="flex items-start justify-between gap-3 px-4 py-3">
+                <div className="min-w-0">
+                  <p className="font-medium text-gray-900 dark:text-white">
+                    HK${row.netAmount.toFixed(2)}
+                    <span className="ml-2 text-xs font-normal text-gray-500">
+                      {row.merchantPaidAt || row.status === 'paid'
+                        ? '已付款'
+                        : row.status === 'confirmed'
+                          ? '已確認'
+                          : '待結算'}
+                    </span>
+                  </p>
+                  <p className="mt-0.5 text-xs text-gray-500">
+                    {row.merchantName}
+                    {row.orderId ? ` · 訂單 #${row.orderId.slice(0, 8)}` : ''}
+                    {!row.merchantPaidAt && row.overdueDays > 0
+                      ? ` · 已待付 ${row.overdueDays} 天`
+                      : ''}
+                  </p>
+                </div>
+                {row.canReportUnpaid && (
+                  <ReportUnpaidButton earningType="promoter" earningId={row.id} />
+                )}
+              </li>
+            ))}
+          </ul>
         </section>
       )}
 

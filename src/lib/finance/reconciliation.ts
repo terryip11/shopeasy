@@ -9,8 +9,6 @@ import { getFinanceOverview } from '@/lib/finance/overview';
 export type FinanceReconciliationView = {
   monthLabel: string;
   revenue: {
-    merchantServiceFee: number;
-    courierPlatformFee: number;
     subscriptionRevenue: number;
     total: number;
   };
@@ -22,11 +20,6 @@ export type FinanceReconciliationView = {
     fixedStripeReported: number;
     fixedOther: number;
     fixedTotal: number;
-    total: number;
-  };
-  liabilities: {
-    merchantPayable: number;
-    courierPendingPayroll: number;
     total: number;
   };
   operatingSurplus: number;
@@ -77,19 +70,12 @@ export async function getFinanceReconciliationView(
   const fixedOther = Number(costs?.other_cost ?? 0);
   const fixedTotal = roundMoney(fixedSupabase + fixedR2 + fixedStripeReported + fixedOther);
 
-  const revenueTotal = overview.monthPlatformRevenue;
-  const costTotal = roundMoney(
-    overview.monthStripeFees + infraAllocated + fixedTotal
-  );
-  const liabilitiesTotal = roundMoney(
-    overview.monthMerchantPayable + overview.pendingCourierPayroll
-  );
+  const revenueTotal = overview.monthSubscriptionRevenue;
+  const costTotal = roundMoney(overview.monthStripeFees + infraAllocated + fixedTotal);
 
   return {
     monthLabel,
     revenue: {
-      merchantServiceFee: overview.monthMerchantServiceFee,
-      courierPlatformFee: overview.monthCourierPlatformFee,
       subscriptionRevenue: overview.monthSubscriptionRevenue,
       total: revenueTotal,
     },
@@ -102,11 +88,6 @@ export async function getFinanceReconciliationView(
       fixedOther,
       fixedTotal,
       total: costTotal,
-    },
-    liabilities: {
-      merchantPayable: overview.monthMerchantPayable,
-      courierPendingPayroll: overview.pendingCourierPayroll,
-      total: liabilitiesTotal,
     },
     operatingSurplus: roundMoney(revenueTotal - costTotal),
     monthlyCostsNotes: costs?.notes ?? null,

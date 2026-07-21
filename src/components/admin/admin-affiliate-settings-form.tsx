@@ -30,7 +30,6 @@ export function AdminAffiliateSettingsForm({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           enabled: settings.enabled,
-          platformCutRate: settings.platformCutRate,
           attributionDays: settings.attributionDays,
           minCommissionRate: settings.minCommissionRate,
           maxCommissionRate: settings.maxCommissionRate,
@@ -49,6 +48,10 @@ export function AdminAffiliateSettingsForm({
 
   return (
     <div className="space-y-4">
+      <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-100">
+        平台以訂閱為主，不抽取分享佣金。佣金由商家以 FPS 直付分享員。
+      </p>
+
       <label className="flex items-center gap-2 text-sm">
         <input
           type="checkbox"
@@ -59,22 +62,6 @@ export function AdminAffiliateSettingsForm({
       </label>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <Label>平台對佣金抽成 (%)</Label>
-          <Input
-            type="number"
-            min={0}
-            max={100}
-            className="mt-1"
-            value={Math.round(settings.platformCutRate * 100)}
-            onChange={(e) =>
-              setSettings((s) => ({
-                ...s,
-                platformCutRate: Number(e.target.value) / 100,
-              }))
-            }
-          />
-        </div>
         <div>
           <Label>歸屬有效期（天）</Label>
           <Input

@@ -3,6 +3,7 @@ import 'server-only';
 import { createClient } from '@/lib/supabase/server';
 import { roundMoney } from '@/lib/finance/config';
 import { syncPendingCourierEarnings } from '@/lib/finance/courier-earnings';
+import { isMerchantDirectPayout } from '@/lib/finance/monetization';
 
 export type CourierEarningItem = {
   id: string;
@@ -16,6 +17,8 @@ export type CourierEarningItem = {
   rating_surcharge: number | null;
   settlement_status: 'pending' | 'settled' | 'reversed';
   earned_at: string;
+  merchant_paid_at: string | null;
+  can_report_unpaid?: boolean;
 };
 
 export type CourierEarningsSummary = {
@@ -47,6 +50,7 @@ type EarningRow = {
   rating_surcharge: number | null;
   settlement_status: string;
   earned_at: string;
+  merchant_paid_at?: string | null;
 };
 
 function hkDateParts(date = new Date()) {
@@ -68,7 +72,8 @@ function formatMonthLabel(y: number, m: number) {
   return `${y}年${m}月`;
 }
 
-function mapRow(r: EarningRow): CourierEarningItem {
+function mapRow(r: EarningRow, merchantDirect: boolean): CourierEarningItem {
+  const merchantPaidAt = r.merchant_paid_at ?? null;
   return {
     id: r.id,
     order_id: r.order_id,
@@ -81,6 +86,9 @@ function mapRow(r: EarningRow): CourierEarningItem {
     rating_surcharge: r.rating_surcharge != null ? Number(r.rating_surcharge) : null,
     settlement_status: r.settlement_status as CourierEarningItem['settlement_status'],
     earned_at: r.earned_at,
+    merchant_paid_at: merchantPaidAt,
+    can_report_unpaid:
+      merchantDirect && !merchantPaidAt && r.settlement_status !== 'reversed',
   };
 }
 
@@ -88,6 +96,7 @@ export async function getCourierEarningsView(courierId: string): Promise<Courier
   await syncPendingCourierEarnings({ courierId });
 
   const supabase = await createClient();
+  const merchantDirect = await isMerchantDirectPayout();
   const { y, m, dateStr } = hkDateParts();
   const monthStart = hkMonthStart(y, m);
   const monthEnd = hkNextMonthStart(y, m);
@@ -124,7 +133,7 @@ export async function getCourierEarningsView(courierId: string): Promise<Courier
     (supabase as any)
       .from('courier_delivery_earnings')
       .select(
-        'id, order_id, job_type, amount, gross_amount, platform_fee_amount, base_amount, rating_surcharge, settlement_status, earned_at'
+        'id, order_id, job_type, amount, gross_amount, platform_fee_amount, base_amount, rating_surcharge, settlement_status, earned_at, merchant_paid_at'
       )
       .eq('courier_id', courierId)
       .neq('settlement_status', 'reversed')
@@ -188,7 +197,9 @@ export async function getCourierEarningsView(courierId: string): Promise<Courier
     customerRatingCount: profile?.customer_rating_count ?? 0,
   };
 
-  const recent = ((recentRes.data || []) as EarningRow[]).map(mapRow);
+  const recent = ((recentRes.data || []) as EarningRow[]).map((r) =>
+    mapRow(r, merchantDirect)
+  );
 
   return { summary, recent };
 }

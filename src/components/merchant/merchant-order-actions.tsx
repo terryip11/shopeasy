@@ -106,13 +106,7 @@ export function MerchantOrderActions({
       refreshOrdersPage();
     } else {
       const msg = data.error || '確認失敗';
-      if (String(msg).includes('預付餘額') || String(msg).includes('平台服務費')) {
-        if (confirm(`${msg}\n\n是否前往「平台服務費」儲值？`)) {
-          router.push('/dashboard/credits');
-        }
-      } else {
-        alert(msg);
-      }
+      alert(msg);
     }
     setLoading(null);
   };
@@ -200,11 +194,6 @@ export function MerchantOrderActions({
           </Button>
         )}
       </div>
-      {isManualPending && (
-        <p className="text-[11px] text-gray-500">
-          確認收款會扣除平台服務費預付餘額；不足請先至「平台服務費」儲值。
-        </p>
-      )}
     </div>
   );
 }

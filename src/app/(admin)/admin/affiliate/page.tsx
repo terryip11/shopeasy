@@ -31,7 +31,7 @@ export default async function AdminAffiliatePage() {
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">分享推廣系統</h1>
           </div>
           <p className="mt-1 text-sm text-gray-500">
-            配置全站分享推廣：平台抽成、歸屬天數、商家佣金上下限
+            配置全站分享推廣：歸屬天數、商家佣金上下限（平台不抽佣金）
           </p>
         </div>
       </div>

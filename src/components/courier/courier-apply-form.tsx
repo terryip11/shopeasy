@@ -33,6 +33,8 @@ export function CourierApplyForm({ zones, jobType }: CourierApplyFormProps) {
   );
   const [zoneIds, setZoneIds] = useState<string[]>([]);
   const [hkidImageUrl, setHkidImageUrl] = useState('');
+  const [payoutAccountHolder, setPayoutAccountHolder] = useState('');
+  const [payoutFpsId, setPayoutFpsId] = useState('');
   const [declarationAccepted, setDeclarationAccepted] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -57,6 +59,8 @@ export function CourierApplyForm({ zones, jobType }: CourierApplyFormProps) {
     phone.trim().length >= 8 &&
     zoneIds.length > 0 &&
     !!hkidImageUrl &&
+    payoutAccountHolder.trim().length >= 2 &&
+    payoutFpsId.trim().length >= 4 &&
     declarationAccepted &&
     !loading;
 
@@ -76,6 +80,8 @@ export function CourierApplyForm({ zones, jobType }: CourierApplyFormProps) {
         zone_ids: zoneIds,
         hkid_image_url: hkidImageUrl,
         declaration_accepted: true,
+        payout_account_holder: payoutAccountHolder.trim(),
+        payout_fps_id: payoutFpsId.trim(),
       }),
     });
 
@@ -189,6 +195,33 @@ export function CourierApplyForm({ zones, jobType }: CourierApplyFormProps) {
         <p className="text-xs text-gray-500 -mt-2">
           請上傳身份證正面清晰照片，資料僅用於入駐審核，不會公開顯示。
         </p>
+
+        <div className="space-y-3 rounded-xl border border-orange-200 bg-orange-50/50 p-4 dark:border-orange-900 dark:bg-orange-950/20">
+          <p className="text-sm font-semibold text-gray-900 dark:text-white">工資收款（FPS）</p>
+          <p className="text-xs text-gray-500">商家完成配送後會依此資料直接轉帳給您。</p>
+          <div>
+            <Label htmlFor="payout-holder">FPS 收款人姓名</Label>
+            <Input
+              id="payout-holder"
+              value={payoutAccountHolder}
+              onChange={(e) => setPayoutAccountHolder(e.target.value)}
+              required
+              className="mt-1.5 h-11 text-base"
+              placeholder="與銀行／FPS 登記姓名一致"
+            />
+          </div>
+          <div>
+            <Label htmlFor="payout-fps">轉數快識別碼</Label>
+            <Input
+              id="payout-fps"
+              value={payoutFpsId}
+              onChange={(e) => setPayoutFpsId(e.target.value)}
+              required
+              className="mt-1.5 h-11 text-base"
+              placeholder="手機號碼、電郵或 FPS ID"
+            />
+          </div>
+        </div>
 
         <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900/50">
           <p className="text-sm font-semibold text-gray-900 dark:text-white">

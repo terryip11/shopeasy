@@ -7,6 +7,8 @@ import { createClient } from '@/lib/supabase/server';
 const patchSchema = z.object({
   is_online: z.boolean().optional(),
   zone_ids: z.array(z.string().uuid()).min(1, '請至少選擇一個配送區域').optional(),
+  payout_account_holder: z.string().min(2, '請填寫 FPS 收款人姓名').max(100).optional(),
+  payout_fps_id: z.string().min(4, '請填寫轉數快 FPS 識別碼').max(100).optional(),
 });
 
 export async function PATCH(request: NextRequest) {

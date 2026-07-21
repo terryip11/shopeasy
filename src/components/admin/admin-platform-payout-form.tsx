@@ -55,9 +55,9 @@ export function AdminPlatformPayoutForm({ initial, canEdit }: Props) {
           <div className="text-sm text-blue-900 dark:text-blue-100">
             <p className="font-medium">用途說明</p>
             <ul className="mt-2 list-inside list-disc space-y-1 text-blue-800/90 dark:text-blue-200/90">
-              <li>線下訂單款項由商家直接收取；平台服務費改為預付，商家轉帳至此 FPS 後申請儲值</li>
-              <li>會計可在「預付餘額」頁審核儲值申請，並提供此收款資料給商家</li>
-              <li>開通 Stripe 後，卡款訂單仍由平台代收並自動扣平台費；此 FPS 主要用於商家預付儲值</li>
+              <li>平台以訂閱為主；此 FPS 供公司收款／例外用途，不向商家強制預存服務費</li>
+              <li>線下訂單貨款由商家直接收取；分享員／配送員工資亦由商家 FPS 直付</li>
+              <li>開通 Stripe Connect 後，卡款可走持牌通道；請避免平台自行代管買家貨款</li>
             </ul>
           </div>
         </div>

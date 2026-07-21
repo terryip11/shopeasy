@@ -31,29 +31,29 @@ const opsNav: AdminNavItem[] = [
 
 /** 會計專用：含訂單查詢入口 */
 const accountantFinanceNav: AdminNavItem[] = [
-  { href: '/admin/finance', label: '交易財務總覽' },
-  { href: '/admin/finance/merchants', label: '商家應付' },
-  { href: '/admin/finance/credits', label: '預付餘額' },
-  { href: '/admin/finance/couriers', label: '配送員結算' },
+  { href: '/admin/finance', label: '財務總覽' },
+  { href: '/admin/revenue', label: '訂閱收入' },
+  { href: '/admin/finance/merchants', label: '訂單分錄' },
+  { href: '/admin/finance/payout-overdue', label: '逾期未付' },
   { href: '/admin/finance/reconciliation', label: '月結對帳' },
   { href: '/admin/finance/platform-payout', label: '平台收款設定' },
-  { href: '/admin/revenue', label: '訂閱收入' },
   { href: '/admin/orders', label: '訂單查詢' },
 ];
 
 /** 超管側欄財務區（訂單已在營運） */
 const adminFinanceNav: AdminNavItem[] = [
-  { href: '/admin/finance', label: '交易財務總覽' },
-  { href: '/admin/finance/merchants', label: '商家應付' },
-  { href: '/admin/finance/credits', label: '預付餘額' },
-  { href: '/admin/finance/couriers', label: '配送員結算' },
+  { href: '/admin/finance', label: '財務總覽' },
+  { href: '/admin/revenue', label: '訂閱收入' },
+  { href: '/admin/finance/merchants', label: '訂單分錄' },
+  { href: '/admin/finance/payout-overdue', label: '逾期未付' },
   { href: '/admin/finance/reconciliation', label: '月結對帳' },
   { href: '/admin/finance/platform-payout', label: '平台收款設定' },
-  { href: '/admin/revenue', label: '訂閱收入' },
 ];
 
 const systemNav: AdminNavItem[] = [
   { href: '/admin/usage', label: '平台使用統計' },
+  { href: '/admin/monetization', label: '收費與結算' },
+  { href: '/admin/landing', label: '首頁版面' },
   { href: '/admin/merchants', label: '商家管理' },
   { href: '/admin/affiliate', label: '分享推廣系統' },
   { href: '/admin/orders/trace', label: '訂單流程追查' },

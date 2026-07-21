@@ -122,6 +122,10 @@ const SUPER_ADMIN_ONLY_PREFIXES = [
 
   '/admin/usage',
 
+  '/admin/landing',
+
+  '/admin/monetization',
+
   '/admin/system',
 
   '/admin/merchants',

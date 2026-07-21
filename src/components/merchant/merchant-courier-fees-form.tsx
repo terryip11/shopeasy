@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-  DEFAULT_PLATFORM_FEE_RATE,
   STRIPE_FEE_FIXED_HKD,
   STRIPE_FEE_PERCENT,
   roundMoney,
@@ -19,10 +18,9 @@ type Props = {
 
 function estimateMerchantCashflow(gmv: number, courierFee: number) {
   const stripeFee = roundMoney(gmv * STRIPE_FEE_PERCENT + STRIPE_FEE_FIXED_HKD);
-  const platformFee = roundMoney(gmv * DEFAULT_PLATFORM_FEE_RATE);
-  const afterFees = roundMoney(gmv - stripeFee - platformFee);
+  const afterFees = roundMoney(gmv - stripeFee);
   const netAfterDelivery = roundMoney(afterFees - courierFee);
-  return { stripeFee, platformFee, afterFees, netAfterDelivery };
+  return { stripeFee, afterFees, netAfterDelivery };
 }
 
 function CourierFeeProfitHint({ foodFee, parcelFee }: { foodFee: number; parcelFee: number }) {
@@ -39,9 +37,9 @@ function CourierFeeProfitHint({ foodFee, parcelFee }: { foodFee: number; parcelF
 
   return (
     <div className="rounded-xl border border-amber-200 bg-amber-50/80 p-4 text-sm dark:border-amber-900/50 dark:bg-amber-900/10">
-      <p className="font-medium text-amber-900 dark:text-amber-200">損益試算（信用卡付款、普通方案）</p>
+      <p className="font-medium text-amber-900 dark:text-amber-200">損益試算（信用卡付款）</p>
       <p className="mt-1 text-xs text-amber-800/90 dark:text-amber-300/90">
-        實際落袋 ≈ 訂單金額 − Stripe 手續費 − 平台服務費 − 配送員工資。低價商品若工資過高，每送一單可能虧損。
+        實際落袋 ≈ 訂單金額 − Stripe 手續費 − 配送員工資（訂閱為主，不另抽訂單服務費）。低價商品若工資過高，每送一單可能虧損。
       </p>
       <div className="mt-3 overflow-x-auto">
         <table className="w-full min-w-[20rem] text-xs">

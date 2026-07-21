@@ -1,5 +1,8 @@
+'use client';
+
 import { JOB_TYPE_LABELS } from '@/lib/auth/capabilities';
 import type { CourierEarningItem } from '@/lib/finance/courier-earnings-view';
+import { ReportUnpaidButton } from '@/components/shared/report-unpaid-button';
 
 const STATUS_LABELS: Record<CourierEarningItem['settlement_status'], string> = {
   pending: '待結算',
@@ -49,33 +52,38 @@ export function CourierEarningsList({ items }: Props) {
               </p>
               {item.rating_surcharge != null && item.rating_surcharge > 0 && (
                 <p className="mt-0.5 text-xs text-emerald-600 dark:text-emerald-400">
-                  基本 HK${(item.base_amount ?? (item.gross_amount ?? item.amount) - item.rating_surcharge).toFixed(0)}
+                  基本 HK$
+                  {(
+                    item.base_amount ??
+                    (item.gross_amount ?? item.amount) - item.rating_surcharge
+                  ).toFixed(0)}
                   {' + 高評加價 HK$'}
                   {item.rating_surcharge.toFixed(0)}
                 </p>
               )}
-              {item.platform_fee_amount != null && item.platform_fee_amount > 0 ? (
-                <p className="mt-0.5 text-xs text-gray-500">
-                  總配送費 HK${(item.gross_amount ?? item.amount + item.platform_fee_amount).toFixed(0)}
-                  {' · 平台服務費 HK$'}
-                  {item.platform_fee_amount.toFixed(0)}
-                </p>
-              ) : item.gross_amount != null && item.gross_amount > item.amount ? (
-                <p className="mt-0.5 text-xs text-gray-500">
-                  總配送費 HK${item.gross_amount.toFixed(0)}
-                  {' · 平台服務費 HK$'}
-                  {(item.gross_amount - item.amount).toFixed(0)}
-                </p>
-              ) : null}
+              {item.merchant_paid_at && (
+                <p className="mt-0.5 text-xs text-emerald-600">商家已標記付款</p>
+              )}
+              {item.can_report_unpaid && (
+                <div className="mt-2">
+                  <ReportUnpaidButton earningType="courier" earningId={item.id} />
+                </div>
+              )}
             </div>
             <div className="shrink-0 text-right">
               <p className="text-base font-bold text-gray-900 dark:text-white">
                 HK${item.amount.toFixed(0)}
               </p>
               <span
-                className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${STATUS_STYLES[item.settlement_status]}`}
+                className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                  item.merchant_paid_at
+                    ? STATUS_STYLES.settled
+                    : STATUS_STYLES[item.settlement_status]
+                }`}
               >
-                {STATUS_LABELS[item.settlement_status]}
+                {item.merchant_paid_at
+                  ? '商家已付'
+                  : STATUS_LABELS[item.settlement_status]}
               </span>
             </div>
           </div>

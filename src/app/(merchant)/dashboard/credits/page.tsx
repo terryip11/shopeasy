@@ -1,28 +1,14 @@
 import { getActiveMerchantForUser } from '@/lib/auth/server';
-import { getPlatformFeeRate } from '@/lib/finance/config';
-import {
-  getMerchantPlatformCreditBalance,
-  listCreditLedgerForMerchant,
-  listTopupRequestsForMerchant,
-} from '@/lib/finance/platform-credit';
-import { getPlatformPayoutSettings } from '@/lib/finance/platform-payout';
-import { MerchantPlatformCreditPanel } from '@/components/merchant/merchant-platform-credit-panel';
-import { ArrowLeft, Wallet } from 'lucide-react';
+import { ArrowLeft, CreditCard } from 'lucide-react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 
 export const dynamic = 'force-dynamic';
 
 export default async function MerchantPlatformCreditPage() {
   const merchant = await getActiveMerchantForUser();
   if (!merchant) redirect('/dashboard');
-
-  const [balance, ledger, topups, payout] = await Promise.all([
-    getMerchantPlatformCreditBalance(merchant.id),
-    listCreditLedgerForMerchant(merchant.id),
-    listTopupRequestsForMerchant(merchant.id),
-    getPlatformPayoutSettings(),
-  ]);
 
   return (
     <div className="space-y-6">
@@ -35,22 +21,29 @@ export default async function MerchantPlatformCreditPage() {
           返回儀表板
         </Link>
         <h1 className="mt-2 flex items-center gap-2 text-2xl font-bold text-gray-900 dark:text-white">
-          <Wallet className="h-7 w-7 text-orange-500" />
-          平台服務費
+          <CreditCard className="h-7 w-7 text-orange-500" />
+          平台收費說明
         </h1>
-        <p className="mt-1 text-sm text-gray-500">
-          線下收款（FPS／銀行／微信／支付寶）確認時會自預付餘額扣除平台服務費。請保持足夠餘額。
-        </p>
       </div>
-
-      <MerchantPlatformCreditPanel
-        balance={balance}
-        feeRate={getPlatformFeeRate(merchant.tier)}
-        tier={merchant.tier}
-        platformPayout={payout}
-        initialLedger={ledger}
-        initialTopups={topups}
-      />
+      <div className="rounded-xl border border-orange-200 bg-orange-50/70 p-6 dark:border-orange-900 dark:bg-orange-950/30">
+        <p className="text-base font-semibold text-orange-950 dark:text-orange-100">
+          目前平台以「訂閱」為主要收費方式
+        </p>
+        <ul className="mt-3 list-inside list-disc space-y-1.5 text-sm text-orange-900/90 dark:text-orange-100/90">
+          <li>不對每筆訂單抽取貨款利潤／平台服務費。</li>
+          <li>買家貨款由您直接收取（FPS／銀行等）。</li>
+          <li>分享員佣金、配送員工資請至「應付佣金／工資」依 FPS 直付並標記已付。</li>
+          <li>請在儀表板管理訂閱方案（高級／尊貴）。</li>
+        </ul>
+        <div className="mt-5 flex flex-wrap gap-2">
+          <Button asChild>
+            <Link href="/dashboard">前往儀表板管理訂閱</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href="/dashboard/payables">應付佣金／工資</Link>
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

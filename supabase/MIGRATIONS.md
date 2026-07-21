@@ -5,7 +5,7 @@
 ## 全新專案
 
 1. 執行 `schema.sql`（基礎表與 RLS）
-2. 依下表從 **v2 到 v51** 依序執行各 `migrate-v*.sql`
+2. 依下表從 **v2 到 v56** 依序執行各 `migrate-v*.sql`
 3. 可選：執行 `seed.sql`（示範分類）
 
 ## 既有專案
@@ -65,6 +65,11 @@
 | v49 | `migrate-v49-product-pickup-location.sql` | 商品綁定取件點 |
 | v50 | `migrate-v50-merchant-platform-credit.sql` | 商家平台費預付餘額 |
 | v51 | `migrate-v51-platform-categories.sql` | 平台分類預設清單＋排序 |
+| v52 | `migrate-v52-landing-variant.sql` | 公開首頁落地頁版面選項 |
+| v53 | `migrate-v53-monetization-mode.sql` | 訂閱為主收費模式＋商家直付結算 |
+| v54 | `migrate-v54-merchant-direct-payout.sql` | 商家標記已付分享員／配送員＋配送員 FPS |
+| v55 | `migrate-v55-payout-overdue.sql` | 逾期催付／限制新建配送／未付回報 |
+| v56 | `migrate-v56-lock-subscription-only.sql` | 強制鎖定訂閱為主＋商家直付 |
 
 ## 驗證
 

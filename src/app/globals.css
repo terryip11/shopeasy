@@ -325,3 +325,52 @@ html[data-theme="dark"] textarea {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* 平台介紹落地頁 */
+@keyframes landing-rise {
+  from {
+    opacity: 0;
+    transform: translateY(1.15rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes landing-kenburns {
+  from {
+    transform: scale(1.08);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+.landing-rise {
+  animation: landing-rise 0.85s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.landing-rise-delay-1 {
+  animation-delay: 0.12s;
+}
+
+.landing-rise-delay-2 {
+  animation-delay: 0.22s;
+}
+
+.landing-rise-delay-3 {
+  animation-delay: 0.34s;
+}
+
+.landing-hero-media {
+  animation: landing-kenburns 14s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-rise,
+  .landing-hero-media {
+    animation: none;
+  }
+}
+
