@@ -11,7 +11,7 @@ const NAV_ITEMS = [
   { href: '/categories', label: '分類', icon: LayoutGrid, match: (p: string) => p.startsWith('/categories') },
   { href: '/cart', label: '購物車', icon: ShoppingCart, match: (p: string) => p === '/cart', showBadge: true },
   { href: '/orders', label: '訂單', icon: Package, match: (p: string) => p.startsWith('/orders') },
-  { href: '/orders', label: '我的', icon: User, match: () => false },
+  { href: '/account', label: '我的', icon: User, match: (p: string) => p.startsWith('/account') },
 ] as const;
 
 export function ProductsBottomNav() {
