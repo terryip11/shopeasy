@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Navbar } from '@/components/marketing/navbar';
 import { Footer } from '@/components/marketing/footer';
+import { ProductsBottomNav } from '@/components/marketing/products-home/products-bottom-nav';
 import { Button } from '@/components/ui/button';
 import { getCart, removeFromCart, getCartTotal, cartLineKey, type CartItem } from '@/lib/cart';
 
@@ -22,9 +23,9 @@ export default function CartPage() {
   };
 
   return (
-    <div className="min-h-full flex flex-col bg-gray-50 dark:bg-gray-950">
+    <div className="flex min-h-dvh flex-col bg-gray-50 dark:bg-gray-950">
       <Navbar />
-      <main className="mx-auto max-w-3xl flex-1 px-4 py-12">
+      <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-12 pb-24 md:pb-12">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">購物車</h1>
         {items.length === 0 ? (
           <p className="mt-8 text-gray-500">購物車是空的</p>
@@ -62,7 +63,10 @@ export default function CartPage() {
           </div>
         )}
       </main>
-      <Footer />
+      <ProductsBottomNav />
+      <div className="hidden md:block">
+        <Footer />
+      </div>
     </div>
   );
 }

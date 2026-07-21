@@ -2,6 +2,7 @@ import Link from 'next/link';
 
 import { Navbar } from '@/components/marketing/navbar';
 import { Footer } from '@/components/marketing/footer';
+import { ProductsBottomNav } from '@/components/marketing/products-home/products-bottom-nav';
 import { BuyerOrderCard } from '@/components/orders/buyer-order-card';
 import { PaginationLinks } from '@/components/ui/pagination-links';
 import { getBuyerOrders } from '@/lib/orders/server';
@@ -23,9 +24,9 @@ export default async function BuyerOrdersPage({ searchParams }: PageProps) {
     ]);
 
   return (
-    <div className="min-h-full flex flex-col bg-gray-50 dark:bg-gray-950">
+    <div className="flex min-h-dvh flex-col bg-gray-50 dark:bg-gray-950">
       <Navbar />
-      <main className="mx-auto max-w-4xl flex-1 px-4 py-12 sm:px-6 lg:px-8">
+      <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-12 pb-24 sm:px-6 md:pb-12 lg:px-8">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">我的訂單</h1>
         <p className="mt-1 text-sm text-gray-500">
           共 {totalCount} 筆進行中訂單 ·{' '}
@@ -82,7 +83,10 @@ export default async function BuyerOrdersPage({ searchParams }: PageProps) {
           </section>
         )}
       </main>
-      <Footer />
+      <ProductsBottomNav />
+      <div className="hidden md:block">
+        <Footer />
+      </div>
     </div>
   );
 }

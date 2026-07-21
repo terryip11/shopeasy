@@ -66,7 +66,7 @@ export function PromoterApplyForm() {
         <ul className="mt-3 space-y-2 text-sm text-violet-900/90 dark:text-violet-100/90">
           <li>• 為已開放分享的商品建立專屬推廣連結</li>
           <li>• 好友透過連結下單並付款後，依佣金比例獲得收入</li>
-          <li>• 於分享員中心查看連結成效與佣金紀錄</li>
+          <li>• 佣金由商家 FPS 直付；於分享員中心查看連結成效與佣金紀錄</li>
         </ul>
       </div>
 
@@ -78,7 +78,7 @@ export function PromoterApplyForm() {
           </h3>
         </div>
         <p className="text-sm text-gray-600 dark:text-gray-300">
-          佣金將透過轉數快撥付至您登記的 FPS 帳戶，請確保資料與銀行／FPS 登記一致。
+          商家會依系統金額以轉數快直接付款給您；請確保資料與銀行／FPS 登記一致。平台不代收代付。
         </p>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">

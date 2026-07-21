@@ -8,6 +8,7 @@ import { ArrowLeft } from 'lucide-react';
 import { Navbar } from '@/components/marketing/navbar';
 import { Footer } from '@/components/marketing/footer';
 import { ProductCard } from '@/components/marketing/product-card';
+import { ProductsBottomNav } from '@/components/marketing/products-home/products-bottom-nav';
 import { getCategoryBySlug } from '@/lib/categories';
 import { getProductsByCategory } from '@/lib/products';
 
@@ -24,12 +25,12 @@ export default async function CategoryDetailPage({ params }: PageProps) {
   const products = await getProductsByCategory(slug, 24);
 
   return (
-    <div className="min-h-full flex flex-col bg-gray-50 dark:bg-gray-950">
+    <div className="flex min-h-dvh flex-col bg-gray-50 dark:bg-gray-950">
       <Navbar />
-      <main className="mx-auto max-w-7xl flex-1 px-4 py-12 sm:px-6 lg:px-8">
+      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-12 pb-24 sm:px-6 md:pb-12 lg:px-8">
         <Link
           href="/categories"
-          className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-orange-600 transition-colors"
+          className="inline-flex items-center gap-2 text-sm text-gray-500 transition-colors hover:text-orange-600"
         >
           <ArrowLeft className="h-4 w-4" />
           返回全部分類
@@ -57,7 +58,10 @@ export default async function CategoryDetailPage({ params }: PageProps) {
           </div>
         )}
       </main>
-      <Footer />
+      <ProductsBottomNav />
+      <div className="hidden md:block">
+        <Footer />
+      </div>
     </div>
   );
 }

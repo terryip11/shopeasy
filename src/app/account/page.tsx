@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { Navbar } from '@/components/marketing/navbar';
 import { Footer } from '@/components/marketing/footer';
+import { ProductsBottomNav } from '@/components/marketing/products-home/products-bottom-nav';
 import { getAuthUser, getProfile } from '@/lib/auth/server';
 import { getCourierProfile } from '@/lib/courier/server';
 import { getAffiliatePlatformSettings } from '@/lib/affiliate/settings';
@@ -52,6 +53,29 @@ export default async function AccountPage() {
       title: '收貨地址',
       description: '管理常用收貨地址',
     },
+  ];
+
+  if (role === 'promoter') {
+    menuItems.push({
+      href: '/promoter',
+      icon: Share2,
+      title: '分享員中心',
+      description: '查看分享連結與佣金收入',
+    });
+  } else {
+    menuItems.push({
+      href: '/account/promoter',
+      icon: Share2,
+      title: '成為分享員',
+      description: !platform.enabled
+        ? '分享計劃登記入口（目前暫未開放）'
+        : canSelfRegisterAsPromoter(role)
+          ? '免費加入，推廣商品賺取佣金（需 FPS 收款資料）'
+          : '需使用買家身分帳號登記（目前身分無法直接登記）',
+    });
+  }
+
+  menuItems.push(
     {
       href: '/courier',
       icon: Bike,
@@ -64,29 +88,13 @@ export default async function AccountPage() {
       icon: Store,
       title: '申請開店',
       description: '成為商家，開始在平台銷售商品',
-    },
-  ];
-
-  if (role === 'promoter') {
-    menuItems.unshift({
-      href: '/promoter',
-      icon: Share2,
-      title: '分享員中心',
-      description: '查看分享連結與佣金收入',
-    });
-  } else if (platform.enabled && canSelfRegisterAsPromoter(role)) {
-    menuItems.push({
-      href: '/account/promoter',
-      icon: Share2,
-      title: '登記成為分享員',
-      description: '免費加入，需登記 FPS 收款資料',
-    });
-  }
+    }
+  );
 
   return (
-    <div className="flex min-h-full flex-col bg-gray-50 dark:bg-gray-950">
+    <div className="flex min-h-dvh flex-col bg-gray-50 dark:bg-gray-950">
       <Navbar />
-      <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-12 sm:px-6 lg:px-8">
+      <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-12 pb-24 sm:px-6 md:pb-12 lg:px-8">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">我的帳號</h1>
         <p className="mt-1 text-sm text-gray-500">管理個人資料與常用功能</p>
 
@@ -124,7 +132,10 @@ export default async function AccountPage() {
           ))}
         </section>
       </main>
-      <Footer />
+      <ProductsBottomNav />
+      <div className="hidden md:block">
+        <Footer />
+      </div>
     </div>
   );
 }
