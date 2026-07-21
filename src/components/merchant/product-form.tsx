@@ -54,6 +54,8 @@ interface ProductFormProps {
     address: string;
     is_default: boolean;
   }>;
+  /** Stripe 線上收款是否已開通；未開通時試算不顯示卡費 */
+  stripePaymentsEnabled?: boolean;
 }
 
 export function ProductForm({
@@ -65,6 +67,7 @@ export function ProductForm({
   businessType,
   menuCategories: initialMenuCategories = [],
   pickupLocations = [],
+  stripePaymentsEnabled = false,
 }: ProductFormProps) {
   const router = useRouter();
   const [name, setName] = useState(initialData?.name || '');
@@ -117,19 +120,22 @@ export function ProductForm({
       courierFee.trim() === '' ? null : Number(courierFee);
     const rawCourier = enteredCourier ?? shopDefault;
     const effectiveCourier = resolveProductCourierBase(enteredCourier, shippingContext);
-    const estimate = estimateSingleItemOrderNet({
+    const baseInput = {
       price: itemPrice,
       shippingFee: shipping,
       courierBase: effectiveCourier,
       platformFeeRate: shippingContext.platformFeeRate,
-    });
+    };
+    const offline = estimateSingleItemOrderNet({ ...baseInput, includeStripe: false });
+    const card = estimateSingleItemOrderNet({ ...baseInput, includeStripe: true });
     return {
       enteredCourier,
       rawCourier,
       effectiveCourier,
       belowMin: minBase > 0 && rawCourier < minBase,
       shippingBelowCourier: shipping < effectiveCourier,
-      estimate,
+      offline,
+      card,
     };
   }, [price, checkoutShippingFee, courierFee, shopDefault, minBase, shippingContext]);
 
@@ -371,6 +377,11 @@ export function ProductForm({
             <p className="mt-1 text-xs text-gray-400">
               留空使用店鋪預設 HK${shopDefault}
               {minBase > 0 && `；平台保底 HK$${minBase}`}
+              。工資由您以 FPS 直付配送員，不會從訂單自動扣除；完成後請至
+              <Link href="/dashboard/payables" className="mx-0.5 text-orange-600 hover:underline">
+                應付佣金／工資
+              </Link>
+              標記已付。
             </p>
           </div>
         </div>
@@ -419,20 +430,11 @@ export function ProductForm({
         )}
 
         <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 text-sm dark:border-gray-800 dark:bg-gray-900/40">
-          <p className="font-medium text-gray-900 dark:text-white">本商品單件訂單試算（信用卡付款）</p>
+          <p className="font-medium text-gray-900 dark:text-white">本商品單件訂單試算</p>
           <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-gray-600 dark:text-gray-400">
             <dt>商品 + 收取客戶的運費</dt>
             <dd className="text-right text-gray-900 dark:text-white">
-              HK${shippingPreview.estimate.gmv.toFixed(2)}
-            </dd>
-            <dt>
-              Stripe 手續費
-              <span className="block font-normal text-gray-400">
-                {(STRIPE_FEE_PERCENT * 100).toFixed(1)}% + HK${STRIPE_FEE_FIXED_HKD}
-              </span>
-            </dt>
-            <dd className="text-right text-red-600 dark:text-red-400">
-              −HK${shippingPreview.estimate.stripeFee.toFixed(2)}
+              HK${shippingPreview.offline.gmv.toFixed(2)}
             </dd>
             {shippingContext.platformFeeRate > 0 && (
               <>
@@ -443,7 +445,7 @@ export function ProductForm({
                   </span>
                 </dt>
                 <dd className="text-right text-red-600 dark:text-red-400">
-                  −HK${shippingPreview.estimate.platformFee.toFixed(2)}
+                  −HK${shippingPreview.offline.platformFee.toFixed(2)}
                 </dd>
               </>
             )}
@@ -451,24 +453,49 @@ export function ProductForm({
             <dd className="text-right text-red-600 dark:text-red-400">
               −HK${shippingPreview.effectiveCourier.toFixed(2)}
             </dd>
-            <dt className="pt-1 border-t border-gray-200 dark:border-gray-700 font-medium text-gray-900 dark:text-white">
-              約落袋
+            <dt className="border-t border-gray-200 pt-1 font-medium text-gray-900 dark:border-gray-700 dark:text-white">
+              約落袋（線下付款）
             </dt>
             <dd
-              className={`pt-1 border-t border-gray-200 dark:border-gray-700 text-right font-medium ${
-                shippingPreview.estimate.netAfterDelivery < 0
+              className={`border-t border-gray-200 pt-1 text-right font-medium dark:border-gray-700 ${
+                shippingPreview.offline.netAfterDelivery < 0
                   ? 'text-red-600'
                   : 'text-gray-900 dark:text-white'
               }`}
             >
-              {shippingPreview.estimate.netAfterDelivery >= 0 ? '+' : ''}
-              HK${shippingPreview.estimate.netAfterDelivery.toFixed(2)}
+              {shippingPreview.offline.netAfterDelivery >= 0 ? '+' : ''}
+              HK${shippingPreview.offline.netAfterDelivery.toFixed(2)}
             </dd>
+            {stripePaymentsEnabled && (
+              <>
+                <dt>
+                  Stripe 手續費
+                  <span className="block font-normal text-gray-400">
+                    {(STRIPE_FEE_PERCENT * 100).toFixed(1)}% + HK${STRIPE_FEE_FIXED_HKD}
+                  </span>
+                </dt>
+                <dd className="text-right text-red-600 dark:text-red-400">
+                  −HK${shippingPreview.card.stripeFee.toFixed(2)}
+                </dd>
+                <dt className="font-medium text-gray-900 dark:text-white">約落袋（信用卡）</dt>
+                <dd
+                  className={`text-right font-medium ${
+                    shippingPreview.card.netAfterDelivery < 0
+                      ? 'text-red-600'
+                      : 'text-gray-900 dark:text-white'
+                  }`}
+                >
+                  {shippingPreview.card.netAfterDelivery >= 0 ? '+' : ''}
+                  HK${shippingPreview.card.netAfterDelivery.toFixed(2)}
+                </dd>
+              </>
+            )}
           </dl>
           <p className="mt-2 text-xs text-gray-400">
             {shippingContext.platformFeeRate > 0
-              ? '試算僅供參考；線下付款無 Stripe 手續費。未含包裝等其他成本。'
-              : '試算僅供參考（訂閱為主，不抽訂單服務費）；線下付款無 Stripe 手續費。未含包裝等其他成本。'}
+              ? '試算僅供參考。訂閱為主時仍可能另有平台服務費；未含包裝等其他成本。'
+              : '試算僅供參考（訂閱為主，不抽訂單服務費）。工資另以 FPS 直付。未含包裝等其他成本。'}
+            {!stripePaymentsEnabled && ' 線上信用卡收款尚未開放。'}
           </p>
         </div>
 

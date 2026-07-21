@@ -113,8 +113,8 @@ export function MerchantPayoutForm({
             </p>
             <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
               {stripePaymentsEnabled
-                ? '客人以信用卡付款時，款項由平台透過 Stripe 代收；無需在此填寫收款帳戶，平台將依結算規則撥付予商家。'
-                : '平台 Stripe 線上收款即將開放。開通前請先設定下方轉帳、FPS 或微信／支付寶收款資料。'}
+                ? '客人以信用卡付款時，款項經 Stripe Connect 直接進入您的收款帳戶；平台不代管、不撥付貨款。線下付款仍請設定下方轉帳、FPS 或微信／支付寶資料。'
+                : '平台 Stripe 線上收款即將開放。開通前請先設定下方轉帳、FPS 或微信／支付寶收款資料（貨款由買家直接付給您）。'}
             </p>
           </div>
         </div>

@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { getActiveMerchantForUser } from '@/lib/auth/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { clampCommissionRate, getAffiliatePlatformSettings } from '@/lib/affiliate/settings';
-import { getPlatformFeeRate } from '@/lib/finance/config';
+import { getEffectivePlatformFeeRate } from '@/lib/finance/monetization';
 import { isStripePaymentsEnabled } from '@/lib/payment/stripe';
 
 const patchSchema = z.object({
@@ -25,6 +25,7 @@ export async function GET() {
     .maybeSingle();
 
   const platform = await getAffiliatePlatformSettings();
+  const platformFeeRate = await getEffectivePlatformFeeRate(merchant.tier);
 
   return NextResponse.json({
     enabled: Boolean((data as { enabled?: boolean } | null)?.enabled),
@@ -32,7 +33,7 @@ export async function GET() {
       (data as { default_commission_rate?: number } | null)?.default_commission_rate ?? 0.1
     ),
     platform,
-    platformFeeRate: getPlatformFeeRate(merchant.tier),
+    platformFeeRate,
     stripePaymentsEnabled: isStripePaymentsEnabled(),
   });
 }

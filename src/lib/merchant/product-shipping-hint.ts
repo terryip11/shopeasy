@@ -40,9 +40,14 @@ export function estimateSingleItemOrderNet(input: {
   shippingFee: number;
   courierBase: number;
   platformFeeRate: number;
+  /** 預設 false：線下付款為主，不含 Stripe 卡費 */
+  includeStripe?: boolean;
 }) {
   const gmv = roundMoney(input.price + input.shippingFee);
-  const stripeFee = roundMoney(gmv * STRIPE_FEE_PERCENT + STRIPE_FEE_FIXED_HKD);
+  const stripeFee =
+    input.includeStripe === true
+      ? roundMoney(gmv * STRIPE_FEE_PERCENT + STRIPE_FEE_FIXED_HKD)
+      : 0;
   const platformFee = roundMoney(gmv * input.platformFeeRate);
   const afterFees = roundMoney(gmv - stripeFee - platformFee);
   const netAfterDelivery = roundMoney(afterFees - input.courierBase);

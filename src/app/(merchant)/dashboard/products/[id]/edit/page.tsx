@@ -12,6 +12,7 @@ import { getCourierMinBaseFees } from '@/lib/finance/platform-settings';
 import { getEffectivePlatformFeeRate } from '@/lib/finance/monetization';
 import { buildProductShippingContext } from '@/lib/merchant/product-shipping-hint';
 import { listPickupLocationsForMerchant } from '@/lib/merchant/pickup-locations';
+import { isStripePaymentsEnabled } from '@/lib/payment/stripe';
 import { ProductForm } from '@/components/merchant/product-form';
 import { ArrowLeft } from 'lucide-react';
 
@@ -58,6 +59,7 @@ export default async function EditProductPage({ params }: PageProps) {
         shippingContext={buildProductShippingContext(merchant, minFees, platformFeeRate)}
         businessType={businessType}
         menuCategories={menuCategories}
+        stripePaymentsEnabled={isStripePaymentsEnabled()}
         pickupLocations={pickupLocations.map((l) => ({
           id: l.id,
           name: l.name,

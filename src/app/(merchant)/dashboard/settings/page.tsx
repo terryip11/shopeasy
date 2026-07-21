@@ -101,7 +101,9 @@ export default async function SettingsPage() {
           <h1 className="text-xl font-bold text-gray-900 dark:text-white sm:text-2xl">
             店鋪設置
           </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">管理您的店鋪信息和配送設置</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            管理店鋪資訊、配送設定與買家付款／收款資料
+          </p>
         </div>
       </div>
 
@@ -185,7 +187,7 @@ export default async function SettingsPage() {
             <div>
               <CardTitle>收款方式</CardTitle>
               <CardDescription>
-                設定銀行、轉數快、微信與支付寶收款資料，供客人線下付款時使用
+                貨款由買家直接付給您；請設定銀行、轉數快、微信與支付寶收款資料
               </CardDescription>
             </div>
           </div>

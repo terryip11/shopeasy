@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import Link from 'next/link';
 import { Calculator, Info } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -74,19 +75,28 @@ export function MerchantAffiliateFeeSection({
           <ul className="mt-2 space-y-1.5 text-sm text-gray-600 dark:text-gray-300">
             <li>
               <strong>分享佣金</strong>
-              ：只依「被分享商品」在訂單內的金額計算，同單其他商品不計入佣金基數。由您以
-              FPS 直付分享員。
+              ：只依「被分享商品」在訂單內的金額計算，同單其他商品與運費不計入佣金基數。由您以
+              FPS 直付分享員（
+              <Link href="/dashboard/payables" className="text-orange-600 hover:underline">
+                應付佣金／工資
+              </Link>
+              ）。
             </li>
-            {showPlatformServiceFee && (
+            {showPlatformServiceFee ? (
               <li>
-                <strong>平台服務費</strong>：依整筆訂單 GMV（商品小計 + 運費）×{' '}
+                <strong>平台服務費</strong>：依整筆訂單總額（商品小計 + 運費）×{' '}
                 {platformFeePercent}% 收取，與是否分享無關。
+              </li>
+            ) : (
+              <li>
+                <strong>平台收費</strong>
+                ：以訂閱為主，不對訂單抽取服務費／分享抽成。
               </li>
             )}
             <li>
-              <strong>運費(向客戶收取的運費)</strong>
+              <strong>運費（向客戶收取）</strong>
               ：不計入分享佣金
-              {showPlatformServiceFee ? '，但會計入 GMV 與平台服務費' : ''}。
+              {showPlatformServiceFee ? '，但會計入訂單總額與平台服務費' : ''}。
             </li>
             {showPlatformCut ? (
               <li>
@@ -94,7 +104,7 @@ export function MerchantAffiliateFeeSection({
                 %)；佣金總額由商家負擔。
               </li>
             ) : (
-              <li>分享員實得 = 佣金總額（平台不抽分享佣金）；佣金由商家負擔並直付。</li>
+              <li>分享員實得 = 佣金總額（平台不抽）；由商家負擔並直付。</li>
             )}
             <li className="text-gray-500">
               試算不含基礎設施分攤
@@ -113,7 +123,7 @@ export function MerchantAffiliateFeeSection({
           費用試算器
         </div>
         <p className="mt-1 text-xs text-gray-500">
-          模擬一筆透過分享連結成交的訂單，預估各項扣除與您實得金額。
+          模擬一筆透過分享連結成交的訂單，預估佣金與您實得金額。
         </p>
 
         <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -142,7 +152,7 @@ export function MerchantAffiliateFeeSection({
             />
           </div>
           <div>
-            <Label htmlFor="calc-shipping">運費(向客戶收取的運費) (HK$)</Label>
+            <Label htmlFor="calc-shipping">運費（向客戶收取）(HK$)</Label>
             <Input
               id="calc-shipping"
               type="number"
@@ -181,7 +191,7 @@ export function MerchantAffiliateFeeSection({
 
         <dl className="mt-5 grid gap-2 text-sm sm:grid-cols-2">
           <div className="flex justify-between rounded-lg bg-gray-50 px-3 py-2 dark:bg-gray-800/60">
-            <dt className="text-gray-500">訂單 GMV</dt>
+            <dt className="text-gray-500">訂單總額</dt>
             <dd className="font-medium">{formatHkd(estimate.gmv)}</dd>
           </div>
           <div className="flex justify-between rounded-lg bg-gray-50 px-3 py-2 dark:bg-gray-800/60">

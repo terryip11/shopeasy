@@ -25,7 +25,7 @@ export function MerchantAffiliatePanel() {
   const [enabled, setEnabled] = useState(false);
   const [defaultRate, setDefaultRate] = useState('10');
   const [platform, setPlatform] = useState<PlatformSettings | null>(null);
-  const [platformFeeRate, setPlatformFeeRate] = useState(0.02);
+  const [platformFeeRate, setPlatformFeeRate] = useState(0);
   const [stripePaymentsEnabled, setStripePaymentsEnabled] = useState(false);  const [products, setProducts] = useState<ProductRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -47,7 +47,7 @@ export function MerchantAffiliatePanel() {
       setEnabled(Boolean(settingsData.enabled));
       setDefaultRate(String(Math.round(Number(settingsData.defaultCommissionRate ?? 0.1) * 100)));
       setPlatform(settingsData.platform ?? null);
-      setPlatformFeeRate(Number(settingsData.platformFeeRate ?? 0.02));
+      setPlatformFeeRate(Number(settingsData.platformFeeRate ?? 0));
       setStripePaymentsEnabled(Boolean(settingsData.stripePaymentsEnabled));
       setProducts(productsData.products || []);    } catch (err) {
       setError((err as Error).message);
@@ -149,7 +149,8 @@ export function MerchantAffiliatePanel() {
 
       <section className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">        <h2 className="font-semibold text-gray-900 dark:text-white">分享推廣計劃</h2>
         <p className="mt-1 text-sm text-gray-500">
-          開啟後，分享員可推廣您允許的商品；成交後佣金只依被分享商品金額計算，並自動從訂單分帳。
+          開啟後，分享員可推廣您允許的商品；成交後佣金只依被分享商品金額計算，請以 FPS
+          直付並於「應付佣金／工資」標記已付。
         </p>
         <div className="mt-4 flex flex-wrap items-end gap-4">
           <label className="flex items-center gap-2 text-sm">
