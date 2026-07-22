@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import Image from 'next/image';
+import { AppImage } from '@/components/shared/app-image';
 import { Copy, Check, Link2, Loader2, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { normalizeR2ImageUrl } from '@/lib/storage/r2-public-url';
@@ -207,7 +207,7 @@ export function PromoterDashboard() {
                   className="flex gap-3 rounded-2xl border border-gray-200 bg-white p-3 dark:border-gray-800 dark:bg-gray-900"
                 >
                   <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-gray-100">
-                    <Image src={imageUrl} alt={product.name} fill className="object-cover" sizes="64px" />
+                    <AppImage src={imageUrl} alt={product.name} fill className="object-cover" sizes="64px" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="line-clamp-2 text-sm font-medium text-gray-900 dark:text-white">

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
+import { AppImage } from '@/components/shared/app-image';
 import { Building2, ScanLine, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -213,7 +213,7 @@ export function MerchantPayoutForm({
         {wechatQrUrl && (
           <div className="flex justify-center">
             <div className="relative h-40 w-40 overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-700">
-              <Image
+              <AppImage
                 src={wechatQrUrl}
                 alt="微信收款碼預覽"
                 fill
@@ -257,7 +257,7 @@ export function MerchantPayoutForm({
         {alipayQrUrl && (
           <div className="flex justify-center">
             <div className="relative h-40 w-40 overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-700">
-              <Image
+              <AppImage
                 src={alipayQrUrl}
                 alt="支付寶收款碼預覽"
                 fill

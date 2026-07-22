@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import Image from 'next/image';
+import { AppImage } from '@/components/shared/app-image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Navbar } from '@/components/marketing/navbar';
@@ -394,11 +394,12 @@ export default function CheckoutPage() {
                   {items.map((item) => (
                     <li key={item.id} className="flex gap-3 px-6 py-4">
                       <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-gray-100 dark:bg-gray-800">
-                        <Image
+                        <AppImage
                           src={item.image?.startsWith('http') ? item.image : '/next.svg'}
                           alt={item.name}
                           fill
                           className="object-cover"
+                          sizes="64px"
                         />
                       </div>
                       <div className="min-w-0 flex-1">

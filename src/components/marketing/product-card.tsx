@@ -3,8 +3,9 @@
  */
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { ShoppingCart, Heart } from 'lucide-react';
+import { AppImage } from '@/components/shared/app-image';
+import { normalizeR2ImageUrl } from '@/lib/storage/r2-public-url';
 
 interface ProductCardProps {
   id: string;
@@ -25,18 +26,19 @@ export function ProductCard({
   merchantName,
   categoryName,
 }: ProductCardProps) {
-  const imageUrl = images?.[0] || '/next.svg';
+  const raw = images?.[0];
+  const imageUrl = normalizeR2ImageUrl(raw) ?? raw ?? '/next.svg';
 
   return (
     <div className="group relative rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 dark:bg-gray-800 dark:border-gray-700">
       {/* Image Container */}
       <div className="relative aspect-square overflow-hidden rounded-t-2xl bg-gray-100 dark:bg-gray-700">
-        <Image
+        <AppImage
           src={imageUrl}
           alt={name}
           fill
           className="object-cover transition-transform duration-500 group-hover:scale-110"
-          sizes="(max-width: 768px) 50vw, (max-width: 1200px) 50vw, 25vw"
+          sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
         />
         
         {/* Overlay Actions */}

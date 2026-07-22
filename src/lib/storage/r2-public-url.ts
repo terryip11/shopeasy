@@ -45,3 +45,19 @@ export function normalizeR2ImageUrl(url: string | null | undefined): string | nu
 
   return url;
 }
+
+/**
+ * 遠端／R2 圖略過 Vercel Image Optimization，改直連來源，節省 Transformations 額度。
+ * 本地靜態資源（如 /next.svg）仍可走優化。
+ */
+export function shouldSkipImageOptimization(src: string): boolean {
+  if (!src) return false;
+  if (src.startsWith('data:') || src.startsWith('blob:')) return true;
+  if (src.startsWith('/api/r2/')) return true;
+  if (src.startsWith('http://') || src.startsWith('https://')) return true;
+
+  const publicBase = getR2PublicBaseUrl();
+  if (publicBase && src.startsWith(publicBase)) return true;
+
+  return false;
+}

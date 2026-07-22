@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
+import { AppImage } from '@/components/shared/app-image';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Navbar } from '@/components/marketing/navbar';
@@ -119,7 +119,7 @@ export default function CheckoutPayPage() {
                 {group.qrUrl && (
                   <div className="mt-4 flex flex-col items-center">
                     <div className="relative h-48 w-48 overflow-hidden rounded-xl border border-gray-200 bg-white">
-                      <Image
+                      <AppImage
                         src={group.qrUrl}
                         alt={`${group.merchantName} 收款碼`}
                         fill

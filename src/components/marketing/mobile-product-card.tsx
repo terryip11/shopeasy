@@ -3,7 +3,7 @@
  */
 
 import Link from 'next/link';
-import Image from 'next/image';
+import { AppImage } from '@/components/shared/app-image';
 import { normalizeR2ImageUrl } from '@/lib/storage/r2-public-url';
 
 interface MobileProductCardProps {
@@ -32,7 +32,7 @@ export function MobileProductCard({
       className="flex flex-col overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-gray-100 active:scale-[0.98] transition-transform dark:bg-gray-900 dark:ring-gray-800"
     >
       <div className="relative aspect-square bg-gray-100 dark:bg-gray-800">
-        <Image
+        <AppImage
           src={imageUrl}
           alt={name}
           fill

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import Image from 'next/image';
+import { AppImage } from '@/components/shared/app-image';
 import { MobileProductCard } from '@/components/marketing/mobile-product-card';
 import type { Product } from '@/lib/products';
 import { normalizeR2ImageUrl } from '@/lib/storage/r2-public-url';
@@ -33,7 +33,7 @@ export function ProductsFlashRow({ products }: Props) {
               className="w-24 shrink-0 rounded-xl bg-white p-2 shadow-sm ring-1 ring-gray-100 active:scale-95 dark:bg-gray-900 dark:ring-gray-800"
             >
               <div className="relative mx-auto aspect-square w-16 overflow-hidden rounded-lg bg-gray-100">
-                <Image src={imageUrl} alt={product.name} fill className="object-cover" sizes="64px" />
+                <AppImage src={imageUrl} alt={product.name} fill className="object-cover" sizes="64px" />
               </div>
               <p className="mt-1.5 text-center text-sm font-bold text-red-500">
                 HK${product.price.toFixed(0)}

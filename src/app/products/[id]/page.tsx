@@ -3,12 +3,13 @@
  */
 
 import { notFound } from 'next/navigation';
-import Image from 'next/image';
 import Link from 'next/link';
 import { Navbar } from '@/components/marketing/navbar';
 import { Footer } from '@/components/marketing/footer';
+import { AppImage } from '@/components/shared/app-image';
 import { createClient } from '@/lib/supabase/server';
 import { ProductPurchasePanel } from '@/components/product/product-purchase-panel';
+import { normalizeR2ImageUrl } from '@/lib/storage/r2-public-url';
 import type { Product } from '@/lib/products';
 
 export const dynamic = 'force-dynamic';
@@ -29,7 +30,8 @@ export default async function ProductDetailPage({ params }: PageProps) {
   const product = data as Product | null;
   if (!product) notFound();
 
-  const imageUrl = product.images?.[0] || '/next.svg';
+  const raw = product.images?.[0];
+  const imageUrl = normalizeR2ImageUrl(raw) ?? raw ?? '/next.svg';
 
   return (
     <div className="min-h-full flex flex-col bg-gray-50 dark:bg-gray-950">
@@ -37,7 +39,14 @@ export default async function ProductDetailPage({ params }: PageProps) {
       <main className="mx-auto max-w-7xl flex-1 px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid gap-8 lg:grid-cols-2">
           <div className="relative aspect-square overflow-hidden rounded-2xl bg-white dark:bg-gray-800">
-            <Image src={imageUrl} alt={product.name} fill className="object-cover" />
+            <AppImage
+              src={imageUrl}
+              alt={product.name}
+              fill
+              className="object-cover"
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              priority
+            />
           </div>
           <div>
             <p className="text-sm text-gray-500">{product.merchants?.name}</p>
