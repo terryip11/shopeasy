@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { uploadImageViaApi } from '@/lib/storage/compress-image-client';
 
 interface ImageUploaderProps {
   onUpload: (url: string) => void;
@@ -30,26 +31,9 @@ export function ImageUploader({
     setUploading(true);
     setError('');
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const res = await fetch('/api/upload/image', {
-        method: 'POST',
-        body: formData,
-      });
-
-      const data = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        throw new Error(data.error || '上傳失敗');
-      }
-
-      if (!data.publicUrl) {
-        throw new Error('未取得檔案網址');
-      }
-
-      setImages((prev) => (multiple ? [...prev, data.publicUrl] : [data.publicUrl]));
-      onUpload(data.publicUrl);
+      const publicUrl = await uploadImageViaApi(file, { maxEdge: 1600, quality: 0.82 });
+      setImages((prev) => (multiple ? [...prev, publicUrl] : [publicUrl]));
+      onUpload(publicUrl);
     } catch (err) {
       console.error('上傳失敗:', err);
       setError((err as Error).message);
@@ -71,7 +55,7 @@ export function ImageUploader({
         disabled={uploading}
         className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100"
       />
-      {uploading && <p className="text-sm text-gray-500">上傳中...</p>}
+      {uploading && <p className="text-sm text-gray-500">壓縮並上傳中...</p>}
       {error && <p className="text-sm text-red-500">{error}</p>}
       {images.length > 0 && (
         <div className="grid grid-cols-3 gap-2">

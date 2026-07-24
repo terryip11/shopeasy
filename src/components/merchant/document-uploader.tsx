@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Upload, CheckCircle2 } from 'lucide-react';
+import { uploadImageViaApi } from '@/lib/storage/compress-image-client';
 
 interface DocumentUploaderProps {
   label: string;
@@ -28,25 +29,12 @@ export function DocumentUploader({ label, value, onUpload, required }: DocumentU
     setError('');
 
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const res = await fetch('/api/upload/image', {
-        method: 'POST',
-        body: formData,
+      const publicUrl = await uploadImageViaApi(file, {
+        maxEdge: 2000,
+        quality: 0.88,
+        skipBelowBytes: 200 * 1024,
       });
-
-      const data = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        throw new Error(data.error || `上傳失敗（${res.status}）`);
-      }
-
-      if (!data.publicUrl) {
-        throw new Error('上傳成功但未取得檔案網址');
-      }
-
-      onUpload(data.publicUrl);
+      onUpload(publicUrl);
     } catch (err) {
       const message = (err as Error).message;
       setError(message === 'Failed to fetch' ? '無法連線至伺服器，請確認已登入並重試' : message);
@@ -86,9 +74,9 @@ export function DocumentUploader({ label, value, onUpload, required }: DocumentU
           )}
           <div className="min-w-0">
             <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              {uploading ? '上傳中...' : value ? '已上傳，點擊可更換' : '點擊或拖放圖片至此'}
+              {uploading ? '壓縮並上傳中...' : value ? '已上傳，點擊可更換' : '點擊或拖放圖片至此'}
             </p>
-            <p className="text-xs text-gray-500">支援 JPG、PNG，最大 10MB</p>
+            <p className="text-xs text-gray-500">支援 JPG、PNG，最大 10MB（會自動壓縮）</p>
           </div>
         </div>
         {value && (

@@ -1,5 +1,3 @@
-'use client';
-
 import { JOB_TYPE_LABELS } from '@/lib/auth/capabilities';
 import type { CourierEarningItem } from '@/lib/finance/courier-earnings-view';
 import { ReportUnpaidButton } from '@/components/shared/report-unpaid-button';

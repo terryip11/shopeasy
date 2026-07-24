@@ -4,11 +4,13 @@
  * 使用 Publishable key (anon key) + Cookie 管理 session
  */
 
+import { cache } from 'react';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import type { Database } from '@/types/database';
 
-export async function createClient() {
+/** 同一 request 內共用同一個 server client，避免重複讀 cookies */
+export const createClient = cache(async () => {
   const cookieStore = await cookies();
 
   return createServerClient<Database>(
@@ -31,5 +33,4 @@ export async function createClient() {
       },
     }
   );
-}
-
+});

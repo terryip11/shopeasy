@@ -15,14 +15,7 @@ import { StoreDeliveryInfo } from '@/components/marketing/store/store-delivery-i
 import { getDeliveryZones } from '@/lib/courier/server';
 import { normalizeStoreThemeColor, storeThemeCssVars } from '@/lib/merchant/store-theme';
 import { normalizeR2ImageUrl } from '@/lib/storage/r2-public-url';
-import {
-  getActiveMerchantBySlug,
-  getStoreCategories,
-  getStoreFeaturedProducts,
-  getStoreProductCount,
-  getStoreProducts,
-  getStoreShippingHint,
-} from '@/lib/merchant/store-page';
+import { getActiveMerchantBySlug, getStorePageBundle } from '@/lib/merchant/store-page';
 
 export const dynamic = 'force-dynamic';
 
@@ -68,15 +61,12 @@ export default async function StorePage({ params, searchParams }: PageProps) {
   const showHomeModules = !q && !categorySlug;
   const themeColor = normalizeStoreThemeColor(merchant.theme_color);
 
-  const [categories, products, productCount, featuredProducts, zones, shippingHint] =
-    await Promise.all([
-      getStoreCategories(merchant.id),
-      getStoreProducts(merchant.id, { q, categorySlug }),
-      getStoreProductCount(merchant.id),
-      showHomeModules ? getStoreFeaturedProducts(merchant.id, 4) : Promise.resolve([]),
-      showHomeModules ? getDeliveryZones() : Promise.resolve([]),
-      showHomeModules ? getStoreShippingHint(merchant.id) : Promise.resolve({ minFee: null, maxFee: null }),
-    ]);
+  const [bundle, zones] = await Promise.all([
+    getStorePageBundle(merchant.id, { q, categorySlug, featuredLimit: 4 }),
+    showHomeModules ? getDeliveryZones() : Promise.resolve([]),
+  ]);
+
+  const { products, featuredProducts, productCount, categories, shippingHint } = bundle;
 
   return (
     <div

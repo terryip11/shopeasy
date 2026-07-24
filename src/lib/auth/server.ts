@@ -4,6 +4,7 @@ import 'server-only';
  * 服務端認證輔助
  */
 
+import { cache } from 'react';
 import { createClient } from '@/lib/supabase/server';
 import type { Database } from '@/types/database';
 import type { UserRole } from './permissions';
@@ -18,15 +19,17 @@ import {
 type Merchant = Database['public']['Tables']['merchants']['Row'];
 type Profile = Database['public']['Tables']['profiles']['Row'];
 
-export async function getAuthUser() {
+/** 同一 request 內只打一次 Auth */
+export const getAuthUser = cache(async () => {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   return user;
-}
+});
 
-export async function getProfile(): Promise<Profile | null> {
+/** 同一 request 內只查一次 profile */
+export const getProfile = cache(async (): Promise<Profile | null> => {
   const supabase = await createClient();
   const user = await getAuthUser();
   if (!user) return null;
@@ -38,7 +41,7 @@ export async function getProfile(): Promise<Profile | null> {
     .single();
 
   return data as Profile | null;
-}
+});
 
 export async function getUserRole(): Promise<UserRole | null> {
   const profile = await getProfile();

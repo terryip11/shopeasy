@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Navbar } from '@/components/marketing/navbar';
+import { SiteNavbar } from '@/components/marketing/site-navbar';
 import { Footer } from '@/components/marketing/footer';
 import { Button } from '@/components/ui/button';
 import { XCircle } from 'lucide-react';
@@ -7,7 +7,7 @@ import { XCircle } from 'lucide-react';
 export default function CheckoutCancelPage() {
   return (
     <div className="min-h-full flex flex-col bg-gray-50 dark:bg-gray-950">
-      <Navbar />
+      <SiteNavbar />
       <main className="mx-auto max-w-lg flex-1 px-4 py-16 text-center">
         <XCircle className="mx-auto h-16 w-16 text-orange-500" />
         <h1 className="mt-6 text-2xl font-bold text-gray-900 dark:text-white">付款已取消</h1>

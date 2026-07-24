@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { requirePermission } from '@/lib/auth/server';
 import { deleteDeliveryZone, updateDeliveryZone } from '@/lib/admin/couriers';
 import { logAdminAction } from '@/lib/admin/merchant-actions';
+import { revalidateDeliveryZonesCache } from '@/lib/courier/server';
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -31,6 +32,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
   }
 
   await logAdminAction(auth.user.id, 'delivery_zone.update', 'delivery_zones', id, body);
+  revalidateDeliveryZonesCache();
 
   return NextResponse.json({ zone: result.zone });
 }
@@ -49,6 +51,7 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
   }
 
   await logAdminAction(auth.user.id, 'delivery_zone.delete', 'delivery_zones', id, {});
+  revalidateDeliveryZonesCache();
 
   return NextResponse.json({ ok: true });
 }

@@ -26,19 +26,36 @@ import { ThemeSwitcher } from '@/components/theme/theme-switcher';
 import { PwaInstallButton } from '@/components/pwa/pwa-install-button';
 import type { UserRole } from '@/lib/auth/permissions';
 
-export function Navbar() {
+export type NavbarAuthState = {
+  loggedIn: boolean;
+  role: UserRole | null;
+  displayName: string | null;
+  email: string | null;
+  courierStatus: string | null;
+};
+
+type Props = {
+  /** 由 Server 預先注入，可略過首屏 /api/me 等待 */
+  initialAuth?: NavbarAuthState | null;
+};
+
+export function Navbar({ initialAuth = null }: Props) {
   const router = useRouter();
   const menuRef = useRef<HTMLDivElement>(null);
   const [scrolled, setScrolled] = useState(false);
   const [cartCount, setCartCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
-  const [role, setRole] = useState<UserRole | null>(null);
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [displayName, setDisplayName] = useState<string | null>(null);
-  const [email, setEmail] = useState<string | null>(null);
+  const [role, setRole] = useState<UserRole | null>(initialAuth?.role ?? null);
+  const [loggedIn, setLoggedIn] = useState(initialAuth?.loggedIn ?? false);
+  const [displayName, setDisplayName] = useState<string | null>(
+    initialAuth?.displayName ?? null
+  );
+  const [email, setEmail] = useState<string | null>(initialAuth?.email ?? null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
-  const [courierStatus, setCourierStatus] = useState<string | null>(null);
+  const [courierStatus, setCourierStatus] = useState<string | null>(
+    initialAuth?.courierStatus ?? null
+  );
 
   const refreshCart = useCallback(() => {
     setCartCount(getCartItemCount());
@@ -61,6 +78,8 @@ export function Navbar() {
   }, [refreshCart]);
 
   useEffect(() => {
+    if (initialAuth) return;
+
     fetch('/api/me')
       .then((r) => r.json())
       .then((data) => {
@@ -77,7 +96,7 @@ export function Navbar() {
         setEmail(null);
         setCourierStatus(null);
       });
-  }, []);
+  }, [initialAuth]);
 
   useEffect(() => {
     if (!menuOpen) return;

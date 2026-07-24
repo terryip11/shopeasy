@@ -16,3 +16,8 @@ export const STORAGE_CONFIG: StorageConfig = {
   },
 };
 
+/**
+ * 物件 key 含時間戳／唯一名，內容不會原地覆寫，可長快取。
+ * 寫入物件 metadata，公開 URL（r2.dev／自訂網域）會帶出此標頭。
+ */
+export const PUBLIC_ASSET_CACHE_CONTROL = 'public, max-age=31536000, immutable';

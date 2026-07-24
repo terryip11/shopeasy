@@ -1,12 +1,11 @@
-import Link from 'next/link';
-
-import { Navbar } from '@/components/marketing/navbar';
+import { SiteNavbar, prefetchSiteNavbarAuth } from '@/components/marketing/site-navbar';
 import { Footer } from '@/components/marketing/footer';
 import { ProductsBottomNav } from '@/components/marketing/products-home/products-bottom-nav';
 import { BuyerOrderCard } from '@/components/orders/buyer-order-card';
 import { PaginationLinks } from '@/components/ui/pagination-links';
 import { getBuyerOrders } from '@/lib/orders/server';
 import { Package } from 'lucide-react';
+import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,15 +16,17 @@ export default async function BuyerOrdersPage({ searchParams }: PageProps) {
   const page = Math.max(1, Number(params.page) || 1);
   const closedPage = Math.max(1, Number(params.closedPage) || 1);
 
-  const [{ orders, totalCount, totalPages }, { orders: closedOrders, totalCount: closedCount, totalPages: closedTotalPages }] =
-    await Promise.all([
-      getBuyerOrders(page, 10, 'active'),
-      getBuyerOrders(closedPage, 10, 'closed'),
-    ]);
+  const [, active, closed] = await Promise.all([
+    prefetchSiteNavbarAuth(),
+    getBuyerOrders(page, 10, 'active'),
+    getBuyerOrders(closedPage, 10, 'closed'),
+  ]);
+  const { orders, totalCount, totalPages } = active;
+  const { orders: closedOrders, totalCount: closedCount, totalPages: closedTotalPages } = closed;
 
   return (
     <div className="flex min-h-dvh flex-col bg-gray-50 dark:bg-gray-950">
-      <Navbar />
+      <SiteNavbar />
       <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-12 pb-24 sm:px-6 md:pb-12 lg:px-8">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">我的訂單</h1>
         <p className="mt-1 text-sm text-gray-500">

@@ -6,7 +6,7 @@ import type { Metadata } from 'next';
 import { PlatformLandingPage } from '@/components/marketing/platform-landing-page';
 import { getLandingVariant } from '@/lib/marketing/landing-theme';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: '關於 ShopEasy',

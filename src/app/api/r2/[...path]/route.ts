@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getR2Object } from '@/lib/storage/r2';
+import { PUBLIC_ASSET_CACHE_CONTROL } from '@/lib/storage/config';
 
 type RouteContext = { params: Promise<{ path: string[] }> };
 
@@ -22,7 +23,7 @@ export async function GET(_request: Request, context: RouteContext) {
     return new NextResponse(Buffer.from(bytes), {
       headers: {
         'Content-Type': object.ContentType || 'image/jpeg',
-        'Cache-Control': 'public, max-age=86400, immutable',
+        'Cache-Control': object.CacheControl || PUBLIC_ASSET_CACHE_CONTROL,
       },
     });
   } catch (error) {

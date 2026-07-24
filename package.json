@@ -6,6 +6,7 @@
     "dev": "next dev --webpack -H 0.0.0.0",
     "dev:clean": "node -e \"try{require('fs').rmSync('.next',{recursive:true,force:true})}catch(e){}\" && next dev --webpack -H 0.0.0.0",
     "build": "next build --webpack",
+    "analyze": "cross-env ANALYZE=true next build --webpack",
     "start": "next start -H 0.0.0.0",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
@@ -38,12 +39,14 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@next/bundle-analyzer": "^16.2.11",
     "@tailwindcss/postcss": "^4",
     "@types/leaflet": "^1.9.21",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/web-push": "^3.6.4",
+    "cross-env": "^10.1.0",
     "eslint": "^9",
     "eslint-config-next": "^16.2.10",
     "serwist": "^9.5.11",

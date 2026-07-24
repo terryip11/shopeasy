@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
 import {
   getTableData,
   getTableSchema,
@@ -10,6 +11,13 @@ import {
 import { requirePermission } from '@/lib/auth/server';
 import { tableActionPermission } from '@/lib/auth/permissions';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';
+import { CACHE_TAGS } from '@/lib/cache-tags';
+
+function bustPublicTableCache(table: string) {
+  if (table === 'categories') {
+    revalidateTag(CACHE_TAGS.categories, 'max');
+  }
+}
 
 type RouteContext = { params: Promise<{ table: string }> };
 
@@ -65,6 +73,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
   try {
     const body = await request.json();
     const record = await createRecord(table, body);
+    bustPublicTableCache(table);
     return NextResponse.json(record);
   } catch (err) {
     console.error(`[admin] 建立 ${table} 失敗:`, err);
@@ -89,6 +98,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     }
 
     const updated = await updateRecord(table, id, record);
+    bustPublicTableCache(table);
     return NextResponse.json(updated);
   } catch (err) {
     console.error(`[admin] 更新 ${table} 失敗:`, err);
@@ -112,5 +122,6 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
   }
 
   await deleteRecord(table, id);
+  bustPublicTableCache(table);
   return NextResponse.json({ success: true });
 }

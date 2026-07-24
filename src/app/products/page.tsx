@@ -3,7 +3,7 @@
  */
 
 import { Suspense } from 'react';
-import { Navbar } from '@/components/marketing/navbar';
+import { SiteNavbar, prefetchSiteNavbarAuth } from '@/components/marketing/site-navbar';
 import { Footer } from '@/components/marketing/footer';
 import { ProductsMobileHeader } from '@/components/marketing/products-home/products-mobile-header';
 import { ProductsCategoryTabs } from '@/components/marketing/products-home/products-category-tabs';
@@ -36,7 +36,8 @@ function feedTitle(q?: string, categorySlug?: string, categories?: { slug: strin
 
 export default async function ProductsPage({ searchParams }: PageProps) {
   const { q, category: categorySlug } = await searchParams;
-  const [categories, products] = await Promise.all([
+  const [, categories, products] = await Promise.all([
+    prefetchSiteNavbarAuth(),
     getCategories(12),
     getProductsForFeed({ q, categorySlug, limit: 24 }),
   ]);
@@ -53,7 +54,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
 
       {/* 桌面：完整導覽 */}
       <div className="hidden md:block">
-        <Navbar />
+        <SiteNavbar />
       </div>
 
       <main className="mx-auto w-full max-w-lg flex-1 px-3 py-3 pb-20 md:max-w-7xl md:px-6 md:py-6 md:pb-10">

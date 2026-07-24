@@ -50,17 +50,69 @@ export function intersectPaymentMethods(merchantMethods: MerchantPaymentMethod[]
   return list.length > 0 ? list : ['card'];
 }
 
+type MerchantPayoutRow = {
+  id: string;
+  name: string;
+  status?: string;
+  payment_methods: string[] | null;
+  payout_bank_name: string | null;
+  payout_account_holder: string | null;
+  payout_account_number: string | null;
+  payout_fps_id: string | null;
+  payout_wechat_id: string | null;
+  payout_wechat_qr_url: string | null;
+  payout_alipay_id: string | null;
+  payout_alipay_qr_url: string | null;
+};
+
+type ProductWithMerchant = ProductRow & {
+  merchants: MerchantPayoutRow | MerchantPayoutRow[] | null;
+};
+
 export async function resolveCheckoutMerchants(items: { id: string; quantity: number; price: number }[]) {
   const supabase = createAdminClient();
   const productIds = items.map((i) => i.id);
 
-  const { data: products } = await supabase
+  // 一次 join 商品＋商家，避免 products → merchants 兩段 round-trip
+  const { data: joined } = await supabase
     .from('products')
-    .select('id, merchant_id, price, checkout_shipping_fee')
+    .select(
+      `
+      id,
+      merchant_id,
+      price,
+      checkout_shipping_fee,
+      merchants!inner (
+        id,
+        name,
+        status,
+        payment_methods,
+        payout_bank_name,
+        payout_account_holder,
+        payout_account_number,
+        payout_fps_id,
+        payout_wechat_id,
+        payout_wechat_qr_url,
+        payout_alipay_id,
+        payout_alipay_qr_url
+      )
+    `
+    )
     .in('id', productIds)
     .eq('status', 'published');
 
-  const productMap = new Map(((products || []) as ProductRow[]).map((p) => [p.id, p]));
+  const rows = ((joined || []) as ProductWithMerchant[]).filter((row) => {
+    const m = Array.isArray(row.merchants) ? row.merchants[0] : row.merchants;
+    return m?.status === 'active';
+  });
+  const products: ProductRow[] = rows.map((r) => ({
+    id: r.id,
+    merchant_id: r.merchant_id,
+    price: r.price,
+    checkout_shipping_fee: r.checkout_shipping_fee,
+  }));
+
+  const productMap = new Map(products.map((p) => [p.id, p]));
 
   const totals = new Map<string, number>();
   for (const item of items) {
@@ -69,34 +121,18 @@ export async function resolveCheckoutMerchants(items: { id: string; quantity: nu
     totals.set(p.merchant_id, (totals.get(p.merchant_id) ?? 0) + item.price * item.quantity);
   }
 
-  const shippingFees = computeMerchantShippingFees(items, (products || []) as ProductRow[]);
+  const shippingFees = computeMerchantShippingFees(items, products);
 
-  const merchantIds = [...totals.keys()];
-  if (merchantIds.length === 0) {
+  if (totals.size === 0) {
     return { merchants: [], methods: ['card'] as MerchantPaymentMethod[], enabled: ['card'] as MerchantPaymentMethod[] };
   }
 
-  const { data: merchants } = await supabase
-    .from('merchants')
-    .select(
-      'id, name, payment_methods, payout_bank_name, payout_account_holder, payout_account_number, payout_fps_id, payout_wechat_id, payout_wechat_qr_url, payout_alipay_id, payout_alipay_qr_url'
-    )
-    .in('id', merchantIds)
-    .eq('status', 'active');
-
-  const merchantRows = (merchants || []) as Array<{
-    id: string;
-    name: string;
-    payment_methods: string[] | null;
-    payout_bank_name: string | null;
-    payout_account_holder: string | null;
-    payout_account_number: string | null;
-    payout_fps_id: string | null;
-    payout_wechat_id: string | null;
-    payout_wechat_qr_url: string | null;
-    payout_alipay_id: string | null;
-    payout_alipay_qr_url: string | null;
-  }>;
+  const merchantById = new Map<string, MerchantPayoutRow>();
+  for (const row of rows) {
+    const m = Array.isArray(row.merchants) ? row.merchants[0] : row.merchants;
+    if (m?.id) merchantById.set(m.id, m);
+  }
+  const merchantRows = [...merchantById.values()].filter((m) => totals.has(m.id));
 
   const methodsPerMerchant = merchantRows.map((m) => normalizePaymentMethods(m.payment_methods));
   const enabled = intersectPaymentMethods(methodsPerMerchant);

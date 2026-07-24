@@ -1,11 +1,11 @@
-import { Navbar } from '@/components/marketing/navbar';
+import { SiteNavbar } from '@/components/marketing/site-navbar';
 import { Footer } from '@/components/marketing/footer';
 import { MerchantApplyForm } from '@/components/merchant/merchant-apply-form';
 
 export default function MerchantApplyPage() {
   return (
     <div className="min-h-full flex flex-col bg-gray-50 dark:bg-gray-950">
-      <Navbar />
+      <SiteNavbar />
       <main className="mx-auto max-w-2xl flex-1 px-4 py-12">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">香港公司商家入駐申請</h1>
         <p className="mt-2 text-sm text-gray-500">

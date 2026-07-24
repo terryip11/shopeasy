@@ -36,27 +36,50 @@ type Props = {
     image: string;
     stock?: number;
   };
+  /** Server 預取的規格／選項；有值則略過 client fetch */
+  extras?: {
+    basePrice: number;
+    variants: Variant[];
+    optionGroups: OptionGroup[];
+  } | null;
 };
 
-export function ProductPurchasePanel({ product }: Props) {
-  const [variants, setVariants] = useState<Variant[]>([]);
-  const [optionGroups, setOptionGroups] = useState<OptionGroup[]>([]);
-  const [basePrice, setBasePrice] = useState(product.price);
+export function ProductPurchasePanel({ product, extras }: Props) {
+  const [variants, setVariants] = useState<Variant[]>(extras?.variants ?? []);
+  const [optionGroups, setOptionGroups] = useState<OptionGroup[]>(extras?.optionGroups ?? []);
+  const [basePrice, setBasePrice] = useState(extras?.basePrice ?? product.price);
   const [selectedVariantId, setSelectedVariantId] = useState('');
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string[]>>({});
   const [quantity, setQuantity] = useState(1);
-  const [loadingExtras, setLoadingExtras] = useState(true);
+  const [loadingExtras, setLoadingExtras] = useState(extras == null);
 
   useEffect(() => {
+    if (extras != null) {
+      setVariants(extras.variants);
+      setOptionGroups(extras.optionGroups);
+      setBasePrice(extras.basePrice);
+      setLoadingExtras(false);
+      return;
+    }
+
+    let cancelled = false;
+    setLoadingExtras(true);
     fetch(`/api/products/${product.id}/extras`)
       .then((r) => r.json())
       .then((data) => {
+        if (cancelled) return;
         if (data.variants) setVariants(data.variants);
         if (data.optionGroups) setOptionGroups(data.optionGroups);
         if (data.basePrice) setBasePrice(Number(data.basePrice));
       })
-      .finally(() => setLoadingExtras(false));
-  }, [product.id]);
+      .finally(() => {
+        if (!cancelled) setLoadingExtras(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [product.id, extras]);
 
   const selectedVariant = variants.find((v) => v.id === selectedVariantId) ?? null;
 

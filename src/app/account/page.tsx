@@ -9,7 +9,7 @@ import {
   Store,
   User,
 } from 'lucide-react';
-import { Navbar } from '@/components/marketing/navbar';
+import { SiteNavbar } from '@/components/marketing/site-navbar';
 import { Footer } from '@/components/marketing/footer';
 import { ProductsBottomNav } from '@/components/marketing/products-home/products-bottom-nav';
 import { getAuthUser, getProfile } from '@/lib/auth/server';
@@ -93,7 +93,7 @@ export default async function AccountPage() {
 
   return (
     <div className="flex min-h-dvh flex-col bg-gray-50 dark:bg-gray-950">
-      <Navbar />
+      <SiteNavbar />
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-12 pb-24 sm:px-6 md:pb-12 lg:px-8">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">我的帳號</h1>
         <p className="mt-1 text-sm text-gray-500">管理個人資料與常用功能</p>

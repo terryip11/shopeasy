@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { Navbar } from '@/components/marketing/navbar';
+import { SiteNavbar, prefetchSiteNavbarAuth } from '@/components/marketing/site-navbar';
 import { Footer } from '@/components/marketing/footer';
 import { OrderStatusBadge } from '@/components/orders/order-status-badge';
 import { BuyerOrderActions } from '@/components/orders/buyer-order-actions';
@@ -19,7 +19,7 @@ type PageProps = { params: Promise<{ id: string }> };
 
 export default async function OrderDetailPage({ params }: PageProps) {
   const { id } = await params;
-  const order = await getBuyerOrder(id);
+  const [, order] = await Promise.all([prefetchSiteNavbarAuth(), getBuyerOrder(id)]);
   if (!order) notFound();
 
   const items = parseOrderItems(order.items);
@@ -31,7 +31,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
 
   return (
     <div className="min-h-full flex flex-col bg-gray-50 dark:bg-gray-950">
-      <Navbar />
+      <SiteNavbar />
       <main className="mx-auto max-w-2xl flex-1 px-4 py-12 sm:px-6 lg:px-8">
         <Link
           href="/orders"

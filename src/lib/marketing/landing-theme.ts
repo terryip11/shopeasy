@@ -1,6 +1,8 @@
 import 'server-only';
 
+import { unstable_cache, revalidateTag, revalidatePath } from 'next/cache';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { CACHE_TAGS } from '@/lib/cache-tags';
 import {
   DEFAULT_LANDING_VARIANT,
   LANDING_VARIANT_SETTING_KEY,
@@ -20,15 +22,25 @@ export {
   type LandingVariantMeta,
 } from '@/lib/marketing/landing-theme-types';
 
-export async function getLandingVariant(): Promise<LandingVariantId> {
-  const supabase = createAdminClient();
-  const { data } = await (supabase as any)
-    .from('platform_settings')
-    .select('value')
-    .eq('key', LANDING_VARIANT_SETTING_KEY)
-    .maybeSingle();
+const LANDING_REVALIDATE_SEC = 60;
 
-  return parseLandingVariant(data?.value);
+const loadLandingVariant = unstable_cache(
+  async (): Promise<LandingVariantId> => {
+    const supabase = createAdminClient();
+    const { data } = await (supabase as any)
+      .from('platform_settings')
+      .select('value')
+      .eq('key', LANDING_VARIANT_SETTING_KEY)
+      .maybeSingle();
+
+    return parseLandingVariant(data?.value);
+  },
+  ['landing-variant'],
+  { revalidate: LANDING_REVALIDATE_SEC, tags: [CACHE_TAGS.landingVariant] }
+);
+
+export async function getLandingVariant(): Promise<LandingVariantId> {
+  return loadLandingVariant();
 }
 
 export async function setLandingVariant(
@@ -57,5 +69,8 @@ export async function setLandingVariant(
     return { error: error.message, variant };
   }
 
+  revalidateTag(CACHE_TAGS.landingVariant, 'max');
+  revalidatePath('/', 'page');
+  revalidatePath('/about', 'page');
   return { error: null, variant };
 }

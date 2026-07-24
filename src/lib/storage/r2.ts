@@ -10,7 +10,7 @@ import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import type { PresignedPutUrl, UploadMetadata } from './types';
 import { buildR2PublicImageUrl } from './r2-public-url';
-import { STORAGE_CONFIG } from './config';
+import { STORAGE_CONFIG, PUBLIC_ASSET_CACHE_CONTROL } from './config';
 
 const r2Client = new S3Client({
   region: 'auto',
@@ -31,6 +31,7 @@ export const uploadToR2 = async (
     Key: key,
     Body: body,
     ContentType: contentType,
+    CacheControl: PUBLIC_ASSET_CACHE_CONTROL,
   });
 
   await r2Client.send(command);
@@ -53,6 +54,7 @@ export const getR2PresignedPutUrl = async (
       Bucket: STORAGE_CONFIG.r2.r2Bucket,
       Key: key,
       ContentType: metadata?.contentType,
+      CacheControl: PUBLIC_ASSET_CACHE_CONTROL,
     });
 
     const url = await getSignedUrl(r2Client, command, { expiresIn: 900 }); // 15min

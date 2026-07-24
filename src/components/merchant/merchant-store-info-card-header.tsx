@@ -1,5 +1,3 @@
-'use client';
-
 import { CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { MerchantLogoMark } from '@/components/merchant/merchant-branding-provider';
 

@@ -9,7 +9,7 @@ import { S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import type { PresignedPutUrl, UploadMetadata } from './types';
-import { STORAGE_CONFIG } from './config';
+import { STORAGE_CONFIG, PUBLIC_ASSET_CACHE_CONTROL } from './config';
 
 const s3Client = new S3Client({
   region: STORAGE_CONFIG.s3.region,
@@ -28,6 +28,7 @@ export const getS3PresignedPutUrl = async (
       Bucket: STORAGE_CONFIG.s3.bucket,
       Key: key,
       ContentType: metadata?.contentType,
+      CacheControl: PUBLIC_ASSET_CACHE_CONTROL,
     });
 
     const url = await getSignedUrl(s3Client, command, { expiresIn: 900 }); // 15min

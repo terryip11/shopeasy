@@ -5,7 +5,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
-import { Navbar } from '@/components/marketing/navbar';
+import { SiteNavbar, prefetchSiteNavbarAuth } from '@/components/marketing/site-navbar';
 import { Footer } from '@/components/marketing/footer';
 import { ProductCard } from '@/components/marketing/product-card';
 import { ProductsBottomNav } from '@/components/marketing/products-home/products-bottom-nav';
@@ -18,15 +18,17 @@ type PageProps = { params: Promise<{ slug: string }> };
 
 export default async function CategoryDetailPage({ params }: PageProps) {
   const { slug } = await params;
-  const category = await getCategoryBySlug(slug);
+  const [, category, products] = await Promise.all([
+    prefetchSiteNavbarAuth(),
+    getCategoryBySlug(slug),
+    getProductsByCategory(slug, 24),
+  ]);
 
   if (!category) notFound();
 
-  const products = await getProductsByCategory(slug, 24);
-
   return (
     <div className="flex min-h-dvh flex-col bg-gray-50 dark:bg-gray-950">
-      <Navbar />
+      <SiteNavbar />
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-12 pb-24 sm:px-6 md:pb-12 lg:px-8">
         <Link
           href="/categories"

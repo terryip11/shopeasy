@@ -1,8 +1,11 @@
 import 'server-only';
 
+import { cache } from 'react';
+import { unstable_cache, revalidateTag } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { getAuthUser } from '@/lib/auth/server';
+import { CACHE_TAGS } from '@/lib/cache-tags';
 import {
   SERVER_LOCATION_MIN_INTERVAL_MS,
   SERVER_LOCATION_MIN_MOVE_METERS,
@@ -54,7 +57,7 @@ export async function hasUserCapability(
   return caps.includes(capability);
 }
 
-export async function getCourierProfile(userId?: string): Promise<CourierProfile | null> {
+export const getCourierProfile = cache(async (userId?: string): Promise<CourierProfile | null> => {
   const uid = userId ?? (await getAuthUser())?.id;
   if (!uid) return null;
 
@@ -66,16 +69,29 @@ export async function getCourierProfile(userId?: string): Promise<CourierProfile
     .maybeSingle();
 
   return data as CourierProfile | null;
+});
+
+const loadDeliveryZones = unstable_cache(
+  async (): Promise<DeliveryZone[]> => {
+    const supabase = createAdminClient();
+    const { data } = await supabase
+      .from('delivery_zones')
+      .select('*')
+      .order('region', { ascending: true, nullsFirst: false })
+      .order('name', { ascending: true });
+    return (data || []) as DeliveryZone[];
+  },
+  ['delivery-zones-list'],
+  { revalidate: 300, tags: [CACHE_TAGS.deliveryZones] }
+);
+
+/** 公開配送區域列表（短快取；admin 變更會 bust tag） */
+export async function getDeliveryZones(): Promise<DeliveryZone[]> {
+  return loadDeliveryZones();
 }
 
-export async function getDeliveryZones(): Promise<DeliveryZone[]> {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from('delivery_zones')
-    .select('*')
-    .order('region', { ascending: true, nullsFirst: false })
-    .order('name', { ascending: true });
-  return (data || []) as DeliveryZone[];
+export function revalidateDeliveryZonesCache() {
+  revalidateTag(CACHE_TAGS.deliveryZones, 'max');
 }
 
 export type CourierAvailableJobsResult = {

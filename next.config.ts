@@ -2,6 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import path from 'node:path';
 import withSerwistInit from '@serwist/next';
+import withBundleAnalyzer from '@next/bundle-analyzer';
 import type { NextConfig } from 'next';
 
 function swcHelperShim(name: 'interop-require-wildcard' | 'interop-require-default') {
@@ -40,8 +41,16 @@ const withSerwist = withSerwistInit({
   ],
 });
 
+const withAnalyzer = withBundleAnalyzer({
+  enabled: process.env.ANALYZE === 'true',
+});
+
 const nextConfig: NextConfig = {
   allowedDevOrigins: lanDevOrigins(),
+  // 減少 lucide-react 等套件被整包打進 client bundle
+  experimental: {
+    optimizePackageImports: ['lucide-react'],
+  },
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: '**.r2.cloudflarestorage.com' },
@@ -70,4 +79,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withSerwist(nextConfig);
+export default withAnalyzer(withSerwist(nextConfig));

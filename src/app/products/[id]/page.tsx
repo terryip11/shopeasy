@@ -4,11 +4,12 @@
 
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { Navbar } from '@/components/marketing/navbar';
+import { SiteNavbar, prefetchSiteNavbarAuth } from '@/components/marketing/site-navbar';
 import { Footer } from '@/components/marketing/footer';
 import { AppImage } from '@/components/shared/app-image';
 import { createClient } from '@/lib/supabase/server';
 import { ProductPurchasePanel } from '@/components/product/product-purchase-panel';
+import { getProductExtras } from '@/lib/products/extras';
 import { normalizeR2ImageUrl } from '@/lib/storage/r2-public-url';
 import type { Product } from '@/lib/products';
 
@@ -20,12 +21,16 @@ export default async function ProductDetailPage({ params }: PageProps) {
   const { id } = await params;
   const supabase = await createClient();
 
-  const { data } = await supabase
-    .from('products')
-    .select('*, merchants (name, slug), categories (name, slug)')
-    .eq('id', id)
-    .eq('status', 'published')
-    .single();
+  const [, { data }, extras] = await Promise.all([
+    prefetchSiteNavbarAuth(),
+    supabase
+      .from('products')
+      .select('*, merchants (name, slug), categories (name, slug)')
+      .eq('id', id)
+      .eq('status', 'published')
+      .single(),
+    getProductExtras(id),
+  ]);
 
   const product = data as Product | null;
   if (!product) notFound();
@@ -35,7 +40,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
   return (
     <div className="min-h-full flex flex-col bg-gray-50 dark:bg-gray-950">
-      <Navbar />
+      <SiteNavbar />
       <main className="mx-auto max-w-7xl flex-1 px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid gap-8 lg:grid-cols-2">
           <div className="relative aspect-square overflow-hidden rounded-2xl bg-white dark:bg-gray-800">
@@ -68,6 +73,15 @@ export default async function ProductDetailPage({ params }: PageProps) {
                   image: imageUrl,
                   stock: product.stock,
                 }}
+                extras={
+                  extras
+                    ? {
+                        basePrice: extras.basePrice,
+                        variants: extras.variants,
+                        optionGroups: extras.optionGroups,
+                      }
+                    : null
+                }
               />
             </div>
             {product.merchants?.slug && (

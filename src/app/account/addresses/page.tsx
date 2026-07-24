@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { Navbar } from '@/components/marketing/navbar';
+import { SiteNavbar } from '@/components/marketing/site-navbar';
 import { Footer } from '@/components/marketing/footer';
 import { BuyerAddressesManager } from '@/components/buyer/buyer-addresses-manager';
 import { getAuthUser } from '@/lib/auth/server';
@@ -16,7 +16,7 @@ export default async function AccountAddressesPage() {
 
   return (
     <div className="flex min-h-full flex-col bg-gray-50 dark:bg-gray-950">
-      <Navbar />
+      <SiteNavbar />
       <main className="mx-auto max-w-3xl flex-1 px-4 py-12 sm:px-6 lg:px-8">
         <Link
           href="/account"

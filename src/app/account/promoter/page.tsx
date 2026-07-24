@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { ChevronLeft, Share2 } from 'lucide-react';
-import { Navbar } from '@/components/marketing/navbar';
+import { SiteNavbar } from '@/components/marketing/site-navbar';
 import { Footer } from '@/components/marketing/footer';
 import { PromoterApplyForm } from '@/components/promoter/promoter-apply-form';
 import { getAuthUser, getProfile } from '@/lib/auth/server';
@@ -26,7 +26,7 @@ export default async function AccountPromoterPage() {
 
   return (
     <div className="flex min-h-full flex-col bg-gray-50 dark:bg-gray-950">
-      <Navbar />
+      <SiteNavbar />
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-12 sm:px-6 lg:px-8">
         <Link
           href="/account"

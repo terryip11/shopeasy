@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { normalizeR2ImageUrl } from '@/lib/storage/r2-public-url';
+import { uploadImageViaApi } from '@/lib/storage/compress-image-client';
 import { useMerchantBranding } from '@/components/merchant/merchant-branding-provider';
 import {
   normalizeStoreThemeColor,
@@ -24,7 +25,7 @@ type MerchantStoreInfoFormProps = {
   storeUrl: string;
 };
 
-async function uploadImage(file: File): Promise<string> {
+async function uploadImage(file: File, kind: 'logo' | 'banner'): Promise<string> {
   if (!file.type.startsWith('image/')) {
     throw new Error('請上傳圖片檔案（JPG、PNG 等）');
   }
@@ -32,20 +33,12 @@ async function uploadImage(file: File): Promise<string> {
     throw new Error('圖片大小不可超過 5MB');
   }
 
-  const formData = new FormData();
-  formData.append('file', file);
+  const publicUrl = await uploadImageViaApi(file, {
+    maxEdge: kind === 'logo' ? 800 : 1920,
+    quality: kind === 'logo' ? 0.85 : 0.82,
+  });
 
-  const res = await fetch('/api/upload/image', { method: 'POST', body: formData });
-  const data = await res.json().catch(() => ({}));
-
-  if (!res.ok) {
-    throw new Error(data.error || '上傳失敗');
-  }
-  if (!data.publicUrl) {
-    throw new Error('上傳成功但未取得圖片網址');
-  }
-
-  return normalizeR2ImageUrl(data.publicUrl) ?? data.publicUrl;
+  return normalizeR2ImageUrl(publicUrl) ?? publicUrl;
 }
 
 function ImageUploadField({
@@ -196,7 +189,7 @@ export function MerchantStoreInfoForm({
     setUploadingLogo(true);
     setError('');
     try {
-      const url = await uploadImage(file);
+      const url = await uploadImage(file, 'logo');
       setLogoUrl(url);
       setBrandingLogo(url);
       setLogoLoadError(false);
@@ -211,7 +204,7 @@ export function MerchantStoreInfoForm({
     setUploadingBanner(true);
     setError('');
     try {
-      const url = await uploadImage(file);
+      const url = await uploadImage(file, 'banner');
       setBannerUrl(url);
       setBannerLoadError(false);
     } catch (err) {

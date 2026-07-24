@@ -6,6 +6,7 @@ import {
   getAdminDeliveryZones,
 } from '@/lib/admin/couriers';
 import { logAdminAction } from '@/lib/admin/merchant-actions';
+import { revalidateDeliveryZonesCache } from '@/lib/courier/server';
 
 const createSchema = z.object({
   name: z.string().min(1, '請填寫名稱'),
@@ -42,6 +43,7 @@ export async function POST(request: NextRequest) {
     name: body.name,
     region: body.region,
   });
+  revalidateDeliveryZonesCache();
 
   return NextResponse.json({ zone: result.zone });
 }
