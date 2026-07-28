@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import { SupabaseAuthListener } from "@/lib/auth/client";
 import { AuthHashRecovery } from "@/components/auth/auth-hash-recovery";
@@ -69,13 +70,15 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <head>
-        {process.env.NODE_ENV === 'development' ? (
-          <script dangerouslySetInnerHTML={{ __html: devSwCleanupScript }} />
-        ) : null}
-        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
-      </head>
       <body className="min-h-full flex flex-col">
+        {process.env.NODE_ENV === "development" ? (
+          <Script id="dev-sw-cleanup" strategy="beforeInteractive">
+            {devSwCleanupScript}
+          </Script>
+        ) : null}
+        <Script id="theme-init" strategy="beforeInteractive">
+          {themeInitScript}
+        </Script>
         <DevServiceWorkerCleanup />
         <PwaProvider>
           <SupabaseAuthListener>

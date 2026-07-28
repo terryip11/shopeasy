@@ -7,7 +7,8 @@ import { loadProductFormExtras } from '@/lib/merchant/product-api-helpers';
 import { listMenuCategories } from '@/lib/merchant/menu-categories';
 import { normalizeBusinessType } from '@/lib/merchant/business-type';
 import type { ProductKind } from '@/lib/merchant/product-kinds';
-import { MERCHANT_TIER_LIMITS, type MerchantTier } from '@/lib/merchant/tier-config';
+import { type MerchantTier } from '@/lib/merchant/tier-config';
+import { getTierLimits } from '@/lib/merchant/tier-limits';
 import { getCourierMinBaseFees } from '@/lib/finance/platform-settings';
 import { getEffectivePlatformFeeRate } from '@/lib/finance/monetization';
 import { buildProductShippingContext } from '@/lib/merchant/product-shipping-hint';
@@ -23,18 +24,27 @@ type PageProps = { params: Promise<{ id: string }> };
 export default async function EditProductPage({ params }: PageProps) {
   const { id } = await params;
   const merchant = await getActiveMerchantForUser();
-  const [product, categories, minFees, extras, menuCategories, pickupLocations, platformFeeRate] =
-    await Promise.all([
-      getMerchantProduct(id),
-      getCategories(100),
-      getCourierMinBaseFees().catch(() => ({ food: 0, parcel: 0 })),
-      loadProductFormExtras(id).catch(() => ({ variants: [], option_groups: [] })),
-      merchant ? listMenuCategories(merchant.id).catch(() => []) : Promise.resolve([]),
-      merchant ? listPickupLocationsForMerchant(merchant.id).catch(() => []) : Promise.resolve([]),
-      getEffectivePlatformFeeRate(merchant?.tier),
-    ]);
+  const [
+    product,
+    categories,
+    minFees,
+    extras,
+    menuCategories,
+    pickupLocations,
+    platformFeeRate,
+    tierLimits,
+  ] = await Promise.all([
+    getMerchantProduct(id),
+    getCategories(100),
+    getCourierMinBaseFees().catch(() => ({ food: 0, parcel: 0 })),
+    loadProductFormExtras(id).catch(() => ({ variants: [], option_groups: [] })),
+    merchant ? listMenuCategories(merchant.id).catch(() => []) : Promise.resolve([]),
+    merchant ? listPickupLocationsForMerchant(merchant.id).catch(() => []) : Promise.resolve([]),
+    getEffectivePlatformFeeRate(merchant?.tier),
+    getTierLimits(),
+  ]);
   const tier = ((merchant?.tier as MerchantTier) || 'basic');
-  const maxImages = MERCHANT_TIER_LIMITS[tier].maxImagesPerProduct;
+  const maxImages = tierLimits[tier].maxImagesPerProduct;
   const businessType = normalizeBusinessType(merchant?.business_type);
 
   if (!product) notFound();

@@ -177,11 +177,9 @@ export default function SignupPage() {
             </p>
           )}
 
-          <Link href="/login" className="block">
-            <Button type="button" className="h-11 w-full bg-orange-500 hover:bg-orange-600">
-              前往登入
-            </Button>
-          </Link>
+          <Button asChild className="h-11 w-full bg-orange-500 hover:bg-orange-600">
+            <Link href="/login">前往登入</Link>
+          </Button>
         </div>
       </AuthPageShell>
     );

@@ -3,7 +3,8 @@ import { getCategories } from '@/lib/categories';
 import { getActiveMerchantForUser } from '@/lib/auth/server';
 import { listMenuCategories } from '@/lib/merchant/menu-categories';
 import { normalizeBusinessType } from '@/lib/merchant/business-type';
-import { MERCHANT_TIER_LIMITS, type MerchantTier } from '@/lib/merchant/tier-config';
+import { type MerchantTier } from '@/lib/merchant/tier-config';
+import { getTierLimits } from '@/lib/merchant/tier-limits';
 import { getCourierMinBaseFees } from '@/lib/finance/platform-settings';
 import { getEffectivePlatformFeeRate } from '@/lib/finance/monetization';
 import { buildProductShippingContext } from '@/lib/merchant/product-shipping-hint';
@@ -16,16 +17,17 @@ export const dynamic = 'force-dynamic';
 
 export default async function NewProductPage() {
   const merchant = await getActiveMerchantForUser();
-  const [categories, minFees, menuCategories, pickupLocations, platformFeeRate] =
+  const [categories, minFees, menuCategories, pickupLocations, platformFeeRate, tierLimits] =
     await Promise.all([
       getCategories(100),
       getCourierMinBaseFees().catch(() => ({ food: 0, parcel: 0 })),
       merchant ? listMenuCategories(merchant.id).catch(() => []) : Promise.resolve([]),
       merchant ? listPickupLocationsForMerchant(merchant.id).catch(() => []) : Promise.resolve([]),
       getEffectivePlatformFeeRate(merchant?.tier),
+      getTierLimits(),
     ]);
   const tier = ((merchant?.tier as MerchantTier) || 'basic');
-  const maxImages = MERCHANT_TIER_LIMITS[tier].maxImagesPerProduct;
+  const maxImages = tierLimits[tier].maxImagesPerProduct;
   const businessType = normalizeBusinessType(merchant?.business_type);
 
   return (

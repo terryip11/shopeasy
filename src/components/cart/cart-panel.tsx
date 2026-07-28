@@ -50,9 +50,9 @@ export function CartPanel() {
       ))}
       <div className="flex items-center justify-between border-t pt-4">
         <span className="text-lg font-bold">合計: HK${total.toFixed(2)}</span>
-        <Link href="/checkout">
-          <Button>前往結帳</Button>
-        </Link>
+        <Button asChild>
+          <Link href="/checkout">前往結帳</Link>
+        </Button>
       </div>
     </div>
   );

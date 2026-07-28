@@ -1,13 +1,14 @@
 import 'server-only';
 
 import { createClient } from '@/lib/supabase/server';
-import type { Database } from '@/types/database';
 import {
   MERCHANT_TIER_LABELS,
   MERCHANT_TIER_LIMITS,
   getUpgradeOptions,
   type MerchantTier,
+  type TierLimit,
 } from '@/lib/merchant/tier-config';
+import { getTierLimits } from '@/lib/merchant/tier-limits';
 
 export type { MerchantTier } from '@/lib/merchant/tier-config';
 export {
@@ -23,7 +24,7 @@ export {
 export type MerchantTierInfo = {
   tier: MerchantTier;
   tierLabel: string;
-  limits: (typeof MERCHANT_TIER_LIMITS)[MerchantTier];
+  limits: TierLimit;
   productCount: number;
   upgradeOptions: MerchantTier[];
   subscription: {
@@ -43,17 +44,20 @@ export async function getMerchantTierInfo(
 ) {
   const supabase = await createClient();
 
-  const { count } = await supabase
-    .from('products')
-    .select('*', { count: 'exact', head: true })
-    .eq('merchant_id', merchantId);
+  const [{ count }, allLimits] = await Promise.all([
+    supabase
+      .from('products')
+      .select('*', { count: 'exact', head: true })
+      .eq('merchant_id', merchantId),
+    getTierLimits(),
+  ]);
 
   const safeTier = (['basic', 'premium', 'vip'].includes(tier) ? tier : 'basic') as MerchantTier;
 
   return {
     tier: safeTier,
     tierLabel: MERCHANT_TIER_LABELS[safeTier],
-    limits: MERCHANT_TIER_LIMITS[safeTier],
+    limits: allLimits[safeTier],
     productCount: count || 0,
     upgradeOptions: getUpgradeOptions(safeTier),
     subscription: {
@@ -64,19 +68,22 @@ export async function getMerchantTierInfo(
   } satisfies MerchantTierInfo;
 }
 
-export type ProductLimitCheck = {
-  ok: true;
-} | {
-  ok: false;
-  error: string;
-};
+export type ProductLimitCheck =
+  | {
+      ok: true;
+    }
+  | {
+      ok: false;
+      error: string;
+    };
 
 export async function checkCanAddProduct(
   merchantId: string,
   tier: MerchantTier
 ): Promise<ProductLimitCheck> {
-  const limits = MERCHANT_TIER_LIMITS[tier]?.maxProducts;
-  if (limits === null) return { ok: true };
+  const allLimits = await getTierLimits();
+  const limits = allLimits[tier]?.maxProducts;
+  if (limits == null) return { ok: true };
 
   const supabase = await createClient();
   const { count } = await supabase

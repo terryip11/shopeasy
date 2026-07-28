@@ -2,7 +2,6 @@ import 'server-only';
 
 import { createAdminClient } from '@/lib/supabase/admin';
 import type { MerchantTier } from '@/lib/merchant/tier-config';
-import { getTierMonthlyPriceHkd } from '@/lib/merchant/tier-config';
 import { parseMonthParam } from '@/lib/finance/month-bounds';
 
 type PaidTier = 'premium' | 'vip';
@@ -31,7 +30,9 @@ export async function activateMerchantTier(params: {
   if (
     oldSubId &&
     oldSubId !== params.stripeSubscriptionId &&
-    params.paymentType === 'initial'
+    params.paymentType === 'initial' &&
+    !oldSubId.startsWith('fps_') &&
+    !oldSubId.startsWith('dev_sub_')
   ) {
     const { getStripe } = await import('@/lib/payment/stripe');
     try {
@@ -58,11 +59,15 @@ export async function activateMerchantTier(params: {
       .maybeSingle();
 
     if (!existing) {
+      const { getTierMonthlyPrices } = await import('@/lib/merchant/tier-pricing');
+      const prices = await getTierMonthlyPrices();
+      const amountHkd = prices[params.tier];
+
       await (supabase as any).from('merchant_subscription_payments').insert({
         merchant_id: params.merchantId,
         user_id: params.userId,
         tier: params.tier,
-        amount_hkd: getTierMonthlyPriceHkd(params.tier),
+        amount_hkd: amountHkd,
         stripe_checkout_session_id: params.stripeCheckoutSessionId ?? null,
         stripe_subscription_id: params.stripeSubscriptionId,
         stripe_invoice_id: params.stripeInvoiceId,
@@ -135,11 +140,35 @@ export async function logRenewalPayment(params: {
     .eq('id', params.merchantId);
 }
 
+export type SubscriptionPaymentChannel = 'fps' | 'dev' | 'stripe';
+
+export type SubscriptionExpiryRow = {
+  id: string;
+  name: string;
+  slug: string;
+  tier: PaidTier;
+  periodEnd: string | null;
+  channel: SubscriptionPaymentChannel;
+  daysRemaining: number | null;
+};
+
 export type SubscriptionRevenueStats = {
   totalRevenue: number;
   monthRevenue: number;
+  monthInitialRevenue: number;
+  monthRenewalRevenue: number;
+  monthInitialCount: number;
+  monthRenewalCount: number;
   activePremium: number;
   activeVip: number;
+  tierDistribution: {
+    basic: number;
+    premium: number;
+    vip: number;
+  };
+  pendingUpgradeCount: number;
+  expiringSoon: SubscriptionExpiryRow[];
+  expired: SubscriptionExpiryRow[];
   recentPayments: Array<{
     id: string;
     merchant_name: string;
@@ -147,34 +176,82 @@ export type SubscriptionRevenueStats = {
     amount_hkd: number;
     payment_type: string;
     paid_at: string;
+    channel: SubscriptionPaymentChannel;
   }>;
 };
+
+export function detectSubscriptionPaymentChannel(
+  subscriptionId?: string | null,
+  invoiceId?: string | null
+): SubscriptionPaymentChannel {
+  const id = `${invoiceId || ''}${subscriptionId || ''}`.toLowerCase();
+  if (id.includes('fps_')) return 'fps';
+  if (id.includes('dev_')) return 'dev';
+  return 'stripe';
+}
+
+export function subscriptionPaymentChannelLabel(channel: SubscriptionPaymentChannel): string {
+  if (channel === 'fps') return 'FPS';
+  if (channel === 'dev') return '開發模式';
+  return 'Stripe';
+}
+
+function daysUntil(iso: string | null, now = new Date()): number | null {
+  if (!iso) return null;
+  const end = new Date(iso);
+  if (Number.isNaN(end.getTime())) return null;
+  const ms = end.getTime() - now.getTime();
+  return Math.ceil(ms / (1000 * 60 * 60 * 24));
+}
 
 export async function getSubscriptionRevenueStats(
   monthParam?: string | null
 ): Promise<SubscriptionRevenueStats> {
   const supabase = createAdminClient();
   const { monthStart, monthEnd } = parseMonthParam(monthParam);
+  const now = new Date();
+  const soonEnd = new Date(now);
+  soonEnd.setDate(soonEnd.getDate() + 14);
 
-  const [{ data: payments }, { count: premiumCount }, { count: vipCount }] = await Promise.all([
+  const [
+    { data: payments },
+    { count: premiumCount },
+    { count: vipCount },
+    { count: basicCount },
+    { count: pendingUpgradeCount },
+    { data: paidMerchants },
+  ] = await Promise.all([
     supabase
       .from('merchant_subscription_payments')
-      .select('id, tier, amount_hkd, payment_type, paid_at, merchant_id, merchants(name)')
+      .select(
+        'id, tier, amount_hkd, payment_type, paid_at, merchant_id, stripe_subscription_id, stripe_invoice_id, merchants(name)'
+      )
       .eq('status', 'completed')
       .gte('paid_at', monthStart)
       .lt('paid_at', monthEnd)
       .order('paid_at', { ascending: false })
-      .limit(20),
+      .limit(50),
     supabase
       .from('merchants')
       .select('*', { count: 'exact', head: true })
-      .eq('tier', 'premium')
-      .not('stripe_subscription_id', 'is', null),
+      .eq('tier', 'premium'),
     supabase
       .from('merchants')
       .select('*', { count: 'exact', head: true })
-      .eq('tier', 'vip')
-      .not('stripe_subscription_id', 'is', null),
+      .eq('tier', 'vip'),
+    supabase
+      .from('merchants')
+      .select('*', { count: 'exact', head: true })
+      .eq('tier', 'basic'),
+    supabase
+      .from('merchant_tier_upgrades')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'pending'),
+    supabase
+      .from('merchants')
+      .select('id, name, slug, tier, tier_period_end, stripe_subscription_id')
+      .in('tier', ['premium', 'vip'])
+      .order('tier_period_end', { ascending: true, nullsFirst: false }),
   ]);
 
   const monthPayments = (payments || []) as Array<{
@@ -183,6 +260,8 @@ export async function getSubscriptionRevenueStats(
     amount_hkd: number;
     payment_type: string;
     paid_at: string;
+    stripe_subscription_id: string | null;
+    stripe_invoice_id: string | null;
     merchants: { name: string } | null;
   }>;
 
@@ -195,11 +274,68 @@ export async function getSubscriptionRevenueStats(
   const totalRevenue = rows.reduce((s, r) => s + Number(r.amount_hkd), 0);
   const monthRevenue = monthPayments.reduce((s, p) => s + Number(p.amount_hkd), 0);
 
+  let monthInitialRevenue = 0;
+  let monthRenewalRevenue = 0;
+  let monthInitialCount = 0;
+  let monthRenewalCount = 0;
+  for (const p of monthPayments) {
+    const amount = Number(p.amount_hkd);
+    if (p.payment_type === 'renewal') {
+      monthRenewalRevenue += amount;
+      monthRenewalCount += 1;
+    } else {
+      monthInitialRevenue += amount;
+      monthInitialCount += 1;
+    }
+  }
+
+  const expiringSoon: SubscriptionExpiryRow[] = [];
+  const expired: SubscriptionExpiryRow[] = [];
+  for (const m of (paidMerchants || []) as Array<{
+    id: string;
+    name: string;
+    slug: string;
+    tier: PaidTier;
+    tier_period_end: string | null;
+    stripe_subscription_id: string | null;
+  }>) {
+    const periodEnd = m.tier_period_end;
+    const days = daysUntil(periodEnd, now);
+    const row: SubscriptionExpiryRow = {
+      id: m.id,
+      name: m.name,
+      slug: m.slug,
+      tier: m.tier,
+      periodEnd,
+      channel: detectSubscriptionPaymentChannel(m.stripe_subscription_id, null),
+      daysRemaining: days,
+    };
+
+    if (days == null) continue;
+    if (days < 0) {
+      expired.push(row);
+    } else if (new Date(periodEnd!).getTime() <= soonEnd.getTime()) {
+      expiringSoon.push(row);
+    }
+  }
+
   return {
     totalRevenue,
     monthRevenue,
+    monthInitialRevenue,
+    monthRenewalRevenue,
+    monthInitialCount,
+    monthRenewalCount,
     activePremium: premiumCount || 0,
     activeVip: vipCount || 0,
+    tierDistribution: {
+      basic: basicCount || 0,
+      premium: premiumCount || 0,
+      vip: vipCount || 0,
+    },
+    pendingUpgradeCount: pendingUpgradeCount || 0,
+    expiringSoon,
+    expired,
     recentPayments: monthPayments.map((p) => ({
       id: p.id,
       merchant_name: p.merchants?.name || '未知商家',
@@ -207,6 +343,7 @@ export async function getSubscriptionRevenueStats(
       amount_hkd: Number(p.amount_hkd),
       payment_type: p.payment_type,
       paid_at: p.paid_at,
+      channel: detectSubscriptionPaymentChannel(p.stripe_subscription_id, p.stripe_invoice_id),
     })),
   };
 }

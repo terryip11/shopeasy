@@ -23,6 +23,7 @@ export const ADMIN_ROLE_LABELS: Record<string, string> = {
 const opsNav: AdminNavItem[] = [
   { href: '/admin', label: '概覽' },
   { href: '/admin/merchants/pending', label: '商家審核' },
+  { href: '/admin/merchants/tier-upgrades', label: '訂閱升級確認' },
   { href: '/admin/categories', label: '分類管理' },
   { href: '/admin/products', label: '商品管理' },
   { href: '/admin/orders', label: '訂單查詢' },
@@ -96,11 +97,18 @@ export function isAdminNavItemActive(pathname: string, href: string): boolean {
       pathname.startsWith('/admin/merchants/pending/')
     );
   }
+  if (href === '/admin/merchants/tier-upgrades') {
+    return (
+      pathname === '/admin/merchants/tier-upgrades' ||
+      pathname.startsWith('/admin/merchants/tier-upgrades/')
+    );
+  }
   if (href === '/admin/merchants') {
     return (
       pathname === '/admin/merchants' ||
       (pathname.startsWith('/admin/merchants/') &&
-        !pathname.startsWith('/admin/merchants/pending'))
+        !pathname.startsWith('/admin/merchants/pending') &&
+        !pathname.startsWith('/admin/merchants/tier-upgrades'))
     );
   }
   if (href === '/admin/orders') {

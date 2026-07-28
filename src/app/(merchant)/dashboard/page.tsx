@@ -7,6 +7,7 @@ import { getMerchantDashboardStats } from '@/lib/merchant/server';
 import { getActiveMerchantForUser, getAuthUser } from '@/lib/auth/server';
 import { getMerchantTierInfo, type MerchantTier } from '@/lib/merchant/tiers';
 import { getTierMonthlyPrices } from '@/lib/merchant/tier-pricing';
+import { getTierLimits } from '@/lib/merchant/tier-limits';
 import { fulfillMerchantTierFromCheckoutSession } from '@/lib/merchant/subscription';
 import { isStripePaymentsEnabled } from '@/lib/payment/stripe';
 import { MerchantTierPanel } from '@/components/merchant/merchant-tier-panel';
@@ -24,6 +25,8 @@ import { MerchantDeliveryJobInfo } from '@/components/merchant/merchant-delivery
 import { OrderStatusBadge } from '@/components/orders/order-status-badge';
 import { refreshMerchantPayoutRestriction } from '@/lib/merchant/payout-compliance';
 import { MerchantPayoutOverdueBanner } from '@/components/merchant/merchant-payout-overdue-banner';
+import { getPlatformPayoutSettings } from '@/lib/finance/platform-payout';
+import { getPendingTierUpgradeForMerchant } from '@/lib/admin/tier-upgrade-actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,7 +43,9 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   }
 
   const merchant = await getActiveMerchantForUser();
-  const [stats, tierInfo, tierPrices] = await Promise.all([
+  const stripeOn = isStripePaymentsEnabled();
+  const [stats, tierInfo, tierPrices, platformPayout, pendingUpgrade, tierLimits] =
+    await Promise.all([
     getMerchantDashboardStats(),
     merchant
       ? getMerchantTierInfo(merchant.id, (merchant.tier as MerchantTier) || 'basic', {
@@ -49,6 +54,9 @@ export default async function DashboardPage({ searchParams }: PageProps) {
         })
       : null,
     getTierMonthlyPrices(),
+    stripeOn ? Promise.resolve(null) : getPlatformPayoutSettings(),
+    merchant && !stripeOn ? getPendingTierUpgradeForMerchant(merchant.id) : Promise.resolve(null),
+    getTierLimits(),
   ]);
 
   const payoutCompliance = merchant
@@ -115,7 +123,10 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           initial={tierInfo}
           monthlyPrices={tierPrices}
           showUpgradeSuccess={params.tier_upgraded === '1'}
-          stripePaymentsEnabled={isStripePaymentsEnabled()}
+          stripePaymentsEnabled={stripeOn}
+          platformPayout={platformPayout}
+          pendingUpgrade={pendingUpgrade}
+          tierLimits={tierLimits}
         />
       )}
 
@@ -162,41 +173,46 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             stats.recentOrders.map((order) => {
               const job = stats.deliveryJobs[order.id] ?? null;
               return (
-                <Link
+                <article
                   key={order.id}
-                  href={`/dashboard/orders/${order.id}`}
-                  className="block rounded-xl border border-gray-100 p-4 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700/40"
+                  className="rounded-xl border border-gray-100 transition-colors dark:border-gray-700"
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="font-mono text-sm font-semibold text-orange-600">
-                        #{order.id.slice(0, 8)}
-                      </p>
-                      <p className="mt-1 text-xs text-gray-500">
-                        {new Date(order.created_at).toLocaleString('zh-HK', {
-                          month: 'numeric',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold text-gray-900 dark:text-white">
-                        HK${order.total?.toFixed(2)}
-                      </p>
-                      <div className="mt-1 flex justify-end">
-                        <OrderStatusBadge status={order.status} />
+                  <Link
+                    href={`/dashboard/orders/${order.id}`}
+                    className="block p-4 pb-3 hover:bg-gray-50 dark:hover:bg-gray-700/40"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-mono text-sm font-semibold text-orange-600">
+                          #{order.id.slice(0, 8)}
+                        </p>
+                        <p className="mt-1 text-xs text-gray-500" suppressHydrationWarning>
+                          {new Date(order.created_at).toLocaleString('zh-HK', {
+                            month: 'numeric',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-gray-900 dark:text-white">
+                          HK${order.total?.toFixed(2)}
+                        </p>
+                        <div className="mt-1 flex justify-end">
+                          <OrderStatusBadge status={order.status} />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="mt-3 border-t border-gray-100 pt-3 dark:border-gray-700">
+                  </Link>
+                  {/* 配送區含 tel: 連結，不可放在外層 <Link> 內，否則會嵌套 <a> 導致 hydration 失敗 */}
+                  <div className="border-t border-gray-100 px-4 pb-4 pt-3 dark:border-gray-700">
                     <p className="text-xs text-gray-400">配送</p>
                     <div className="mt-1">
                       <MerchantDeliveryJobInfo job={job} />
                     </div>
                   </div>
-                </Link>
+                </article>
               );
             })
           ) : (
@@ -246,7 +262,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
                     <td className="px-6 py-4">
                       <MerchantDeliveryJobInfo job={job} />
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
+                    <td className="px-6 py-4 text-sm text-gray-500" suppressHydrationWarning>
                       {new Date(order.created_at).toLocaleDateString('zh-TW')}
                     </td>
                   </tr>

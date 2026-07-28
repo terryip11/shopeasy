@@ -8,6 +8,7 @@ import {
   checkImageCount,
   type MerchantTier,
 } from '@/lib/merchant/tiers';
+import { getTierLimits } from '@/lib/merchant/tier-limits';
 import {
   buildProductInsertPayload,
   persistProductExtras,
@@ -64,7 +65,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: productLimit.error }, { status: 403 });
     }
 
-    const imageLimit = checkImageCount(tier, parsed.images?.length ?? 0);
+    const tierLimits = await getTierLimits();
+    const imageLimit = checkImageCount(tier, parsed.images?.length ?? 0, tierLimits);
     if (!imageLimit.ok) {
       return NextResponse.json({ error: imageLimit.error }, { status: 403 });
     }

@@ -98,10 +98,6 @@ export function AdminMerchantTierPricingForm({ initialPrices }: Props) {
         </div>
       </div>
 
-      <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
-        調整價格僅影響<strong>之後</strong>的 Stripe 訂閱結帳；既有訂閱在 Stripe 上仍按原合約金額續訂，直至商家重新訂閱或方案變更。
-      </div>
-
       {error && <p className="text-sm text-red-600">{error}</p>}
       {message && <p className="text-sm text-green-600">{message}</p>}
 

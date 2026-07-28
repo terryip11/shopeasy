@@ -70,6 +70,7 @@
 | v54 | `migrate-v54-merchant-direct-payout.sql` | 商家標記已付分享員／配送員＋配送員 FPS |
 | v55 | `migrate-v55-payout-overdue.sql` | 逾期催付／限制新建配送／未付回報 |
 | v56 | `migrate-v56-lock-subscription-only.sql` | 強制鎖定訂閱為主＋商家直付 |
+| v57 | `migrate-v57-merchant-tier-limits.sql` | 商家等級商品／圖片上限 platform_settings |
 
 ## 驗證
 

@@ -4,6 +4,7 @@ import { productSchema, productCreateSchema } from '@/lib/merchant/products';
 import { requireRole, getActiveMerchantForUser } from '@/lib/auth/server';
 import { createClient } from '@/lib/supabase/server';
 import { checkImageCount, type MerchantTier } from '@/lib/merchant/tiers';
+import { getTierLimits } from '@/lib/merchant/tier-limits';
 import {
   buildProductInsertPayload,
   loadProductFormExtras,
@@ -83,7 +84,8 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     if (parsed.images !== undefined) {
       const tier = ((result.merchant!.tier as MerchantTier) || 'basic');
-      const imageLimit = checkImageCount(tier, parsed.images.length);
+      const tierLimits = await getTierLimits();
+      const imageLimit = checkImageCount(tier, parsed.images.length, tierLimits);
       if (!imageLimit.ok) {
         return NextResponse.json({ error: imageLimit.error }, { status: 403 });
       }

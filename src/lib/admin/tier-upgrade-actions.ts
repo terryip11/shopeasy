@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { logAdminAction } from '@/lib/admin/merchant-actions';
 import type { MerchantTier } from '@/lib/merchant/tier-config';
 import { isHigherTier } from '@/lib/merchant/tier-config';
+import { activateMerchantTier } from '@/lib/merchant/subscription';
 
 export async function getPendingTierUpgrades() {
   const supabase = createAdminClient();
@@ -15,6 +16,25 @@ export async function getPendingTierUpgrades() {
 
   if (error) throw error;
   return data || [];
+}
+
+export async function getPendingTierUpgradeForMerchant(merchantId: string) {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from('merchant_tier_upgrades')
+    .select('id, requested_tier, note, applied_at, status')
+    .eq('merchant_id', merchantId)
+    .eq('status', 'pending')
+    .maybeSingle();
+
+  if (error) throw error;
+  return data as {
+    id: string;
+    requested_tier: MerchantTier;
+    note: string | null;
+    applied_at: string;
+    status: string;
+  } | null;
 }
 
 export async function approveTierUpgrade(upgradeId: string, adminId: string) {
@@ -31,6 +51,7 @@ export async function approveTierUpgrade(upgradeId: string, adminId: string) {
   const row = upgrade as {
     id: string;
     merchant_id: string;
+    user_id: string;
     status: string;
     current_tier: MerchantTier;
     requested_tier: MerchantTier;
@@ -50,10 +71,22 @@ export async function approveTierUpgrade(upgradeId: string, adminId: string) {
     throw new Error('申請等級必須高於商家目前等級');
   }
 
-  await (supabase as any)
-    .from('merchants')
-    .update({ tier: row.requested_tier })
-    .eq('id', row.merchant_id);
+  if (row.requested_tier !== 'premium' && row.requested_tier !== 'vip') {
+    throw new Error('無效的升級等級');
+  }
+
+  const periodEnd = new Date();
+  periodEnd.setMonth(periodEnd.getMonth() + 1);
+
+  await activateMerchantTier({
+    merchantId: row.merchant_id,
+    userId: row.user_id,
+    tier: row.requested_tier,
+    stripeSubscriptionId: `fps_sub_${row.id}`,
+    periodEnd,
+    stripeInvoiceId: `fps_inv_${row.id}`,
+    paymentType: 'initial',
+  });
 
   await (supabase as any)
     .from('merchant_tier_upgrades')
@@ -67,6 +100,7 @@ export async function approveTierUpgrade(upgradeId: string, adminId: string) {
   await logAdminAction(adminId, 'merchant.tier_upgrade.approve', 'merchant_tier_upgrades', upgradeId, {
     merchant_id: row.merchant_id,
     tier: row.requested_tier,
+    payment: 'fps',
   });
 }
 

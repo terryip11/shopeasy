@@ -6,14 +6,27 @@ export const MERCHANT_TIER_LABELS: Record<MerchantTier, string> = {
   vip: '尊貴商家',
 };
 
-export const MERCHANT_TIER_LIMITS: Record<
-  MerchantTier,
-  { maxProducts: number | null; maxImagesPerProduct: number }
-> = {
+export type TierLimit = {
+  maxProducts: number;
+  maxImagesPerProduct: number;
+};
+
+export type TierLimitsMap = Record<MerchantTier, TierLimit>;
+
+/** 預設上限；後台可透過 platform_settings 覆寫 */
+export const MERCHANT_TIER_LIMITS: TierLimitsMap = {
   basic: { maxProducts: 3, maxImagesPerProduct: 2 },
   premium: { maxProducts: 20, maxImagesPerProduct: 5 },
   vip: { maxProducts: 50, maxImagesPerProduct: 8 },
 };
+
+export function getDefaultTierLimits(): TierLimitsMap {
+  return {
+    basic: { ...MERCHANT_TIER_LIMITS.basic },
+    premium: { ...MERCHANT_TIER_LIMITS.premium },
+    vip: { ...MERCHANT_TIER_LIMITS.vip },
+  };
+}
 
 /** 月費（HKD）預設值；後台可透過 platform_settings 覆寫 */
 export const TIER_MONTHLY_PRICE_HKD: Record<'premium' | 'vip', number> = {
@@ -53,8 +66,12 @@ export function getUpgradeOptions(current: MerchantTier): MerchantTier[] {
   return [];
 }
 
-export function checkImageCount(tier: MerchantTier, imageCount: number) {
-  const max = MERCHANT_TIER_LIMITS[tier]?.maxImagesPerProduct ?? 2;
+export function checkImageCount(
+  tier: MerchantTier,
+  imageCount: number,
+  limitsMap: TierLimitsMap = MERCHANT_TIER_LIMITS
+) {
+  const max = limitsMap[tier]?.maxImagesPerProduct ?? 2;
   if (imageCount > max) {
     return {
       ok: false as const,

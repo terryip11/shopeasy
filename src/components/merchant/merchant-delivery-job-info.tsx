@@ -63,7 +63,9 @@ export function MerchantDeliveryJobInfo({ job }: { job: MerchantDeliveryJobSumma
         <p className="text-xs text-gray-400">未填電話</p>
       ) : null}
       {job.assigned_at && (
-        <p className="text-xs text-gray-500">接單 {formatAssignedAt(job.assigned_at)}</p>
+        <p className="text-xs text-gray-500" suppressHydrationWarning>
+          接單 {formatAssignedAt(job.assigned_at)}
+        </p>
       )}
       <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${statusStyle}`}>
         {statusLabel}

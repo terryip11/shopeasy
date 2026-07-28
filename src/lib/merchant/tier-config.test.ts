@@ -14,5 +14,12 @@ describe('merchant tier config', () => {
   it('enforces image limits', () => {
     expect(checkImageCount('basic', 2).ok).toBe(true);
     expect(checkImageCount('basic', 3).ok).toBe(false);
+    expect(
+      checkImageCount('basic', 3, {
+        basic: { maxProducts: 3, maxImagesPerProduct: 4 },
+        premium: { maxProducts: 20, maxImagesPerProduct: 5 },
+        vip: { maxProducts: 50, maxImagesPerProduct: 8 },
+      }).ok
+    ).toBe(true);
   });
 });

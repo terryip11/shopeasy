@@ -26,7 +26,9 @@ export function TierUpgradeApprovalList({ initial }: { initial: UpgradeRow[] }) 
     if (action === 'reject') {
       reason = prompt('拒絕原因（選填）：') || undefined;
       if (reason === null) return;
-    } else if (!confirm('確認通過此升級申請？商家等級將立即更新。')) {
+    } else if (
+      !confirm('確認已核對 FPS 到帳？通過後將開通商家等級一個月。')
+    ) {
       return;
     }
 
@@ -50,7 +52,7 @@ export function TierUpgradeApprovalList({ initial }: { initial: UpgradeRow[] }) 
   if (items.length === 0) {
     return (
       <p className="rounded-lg bg-white py-12 text-center text-gray-500 shadow dark:bg-gray-900">
-        目前沒有待審核的商家升級申請
+        目前沒有待確認的 FPS 訂閱升級
       </p>
     );
   }
